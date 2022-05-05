@@ -1,8 +1,10 @@
 "use strict";
 const express = require("express");
+const swaggerUi = require("swagger-ui-express");
 const { sequelize } = require("./src/database/models");
 const rootRouter = require("./src/routes");
 const errorHandler = require("./src/middlewares/errorHandler");
+const swaggerSpec = require("./src/docs");
 
 const app = express();
 
@@ -11,6 +13,8 @@ app.use(express.json());
 
 // parse incoming requests with urlencoded payloads and is based on body-parser
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api", rootRouter);
 

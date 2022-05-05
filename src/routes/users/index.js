@@ -58,6 +58,73 @@ userRouter.post("/", validateCreateUserSchema(), async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     tags: ['Users']
+ *     summary:
+ *     description:
+ *     responses:
+ *       '200':
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 1
+ *                           firstName:
+ *                             type: string
+ *                             example: Admin
+ *                           lastName:
+ *                             type: string
+ *                             example: User
+ *                           email:
+ *                             type: string
+ *                             example: admin@example.com
+ *                           phoneNumber:
+ *                             type: string
+ *                             example: null
+ *                           dateOfBirth:
+ *                             type: date
+ *                             example: null
+ *                           role:
+ *                             type: string
+ *                             example: admin
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *       '500':
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
 userRouter.get("/", async (req, res, next) => {
   try {
     const users = await getUsers();
