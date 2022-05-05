@@ -1,10 +1,9 @@
 "use strict";
 const express = require("express");
+const userRouter = require("./users");
 
 const rootRouter = express.Router();
 
-rootRouter.get("/", (req, res) => {
-  res.send("hello world");
-});
+rootRouter.use("/users", userRouter);
 
 module.exports = rootRouter;
