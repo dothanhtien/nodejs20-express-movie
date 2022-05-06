@@ -47,7 +47,7 @@ userRouter.post("/", validateCreateUserSchema(), async (req, res, next) => {
       dateOfBirth,
     });
 
-    res.json({
+    res.status(201).json({
       status: "success",
       data: {
         user,

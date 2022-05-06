@@ -148,6 +148,21 @@ const getUserById = async (id) => {
   }
 };
 
+const getUserByEmail = async (email) => {
+  try {
+    const user = await User.findOne({
+      where: {
+        email,
+      },
+    });
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 const updateUser = async (data, id) => {
   try {
     const isUpdated = await User.update(data, {
@@ -186,6 +201,7 @@ module.exports = {
   createUser,
   getUsers,
   getUserById,
+  getUserByEmail,
   updateUser,
   deleteUserById,
 };

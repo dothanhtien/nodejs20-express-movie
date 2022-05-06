@@ -1,11 +1,13 @@
 # Online Movie Ticket Booking System
 
 ## I. Installation
+
 1. Clone or download from github: `https://github.com/dothanhtien/nodejs20-express-movie.git`
 2. Add `.env` file in the root folder
 3. Run command: `yarn`
 
 ## II. .env file content
+
 ```
 NODE_ENV="development"
 
@@ -26,4 +28,7 @@ PROD_DB_PASSWORD=null
 PROD_DB_DATABASE="prod_database"
 PROD_DB_HOST="127.0.0.1"
 PROD_DB_DIALECT="mysql"
+
+JWT_SECRET="secret-key"
+JWT_TOKEN_EXPIRATION=86400
 ```
