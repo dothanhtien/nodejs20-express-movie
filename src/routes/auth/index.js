@@ -14,6 +14,7 @@ const {
   hashPassword,
 } = require("../../services/auth");
 const ApiError = require("../../utils/apiError");
+const { authenticate } = require("../../middlewares/auth");
 
 const authRouter = express.Router();
 
@@ -99,5 +100,17 @@ authRouter.post(
     }
   }
 );
+
+authRouter.get("/me", [authenticate], (req, res, next) => {
+  try {
+    res.json({
+      data: {
+        user: req.user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = authRouter;
