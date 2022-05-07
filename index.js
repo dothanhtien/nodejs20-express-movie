@@ -1,5 +1,6 @@
 "use strict";
 const express = require("express");
+const path = require("path");
 const { sequelize } = require("./src/database/models");
 const rootRouter = require("./src/routes");
 const errorHandler = require("./src/middlewares/errorHandler");
@@ -11,6 +12,8 @@ app.use(express.json());
 
 // parse incoming requests with urlencoded payloads and is based on body-parser
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use("/api", rootRouter);
 

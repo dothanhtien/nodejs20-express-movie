@@ -11,6 +11,9 @@
 ```
 NODE_ENV="development"
 
+BASE_URL="http://localhost:8080"
+PORT=8080
+
 DEV_DB_USERNAME="root"
 DEV_DB_PASSWORD=null
 DEV_DB_DATABASE="dev_database"

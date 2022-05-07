@@ -11,6 +11,7 @@ const {
   deleteMovie,
 } = require("../../services/movies");
 const { authenticate } = require("../../middlewares/auth");
+const { uploadImage } = require("../../middlewares/upload");
 const { validationResult } = require("express-validator");
 const ApiError = require("../../utils/apiError");
 
@@ -18,7 +19,7 @@ const movieRouter = express.Router();
 
 movieRouter.post(
   "/",
-  [authenticate, validateCreateMovieSchema()],
+  [authenticate, uploadImage("movies", "poster"), validateCreateMovieSchema()],
   async (req, res, next) => {
     const errors = validationResult(req);
 
@@ -32,13 +33,14 @@ movieRouter.post(
     const {
       name,
       description,
-      poster,
       trailer,
       rating,
       duration,
       status,
       releaseDate,
     } = req.body;
+
+    const poster = req.file.path;
 
     try {
       const movie = await createMovie({

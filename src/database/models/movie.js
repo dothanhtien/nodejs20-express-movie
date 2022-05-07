@@ -15,7 +15,13 @@ module.exports = (sequelize, DataTypes) => {
     {
       name: DataTypes.STRING,
       description: DataTypes.TEXT,
-      poster: DataTypes.STRING,
+      poster: {
+        type: DataTypes.STRING,
+        get() {
+          const rawValue = this.getDataValue("poster");
+          return rawValue ? `${process.env.BASE_URL}/${rawValue}` : null;
+        },
+      },
       trailer: DataTypes.STRING,
       rating: DataTypes.FLOAT,
       duration: DataTypes.INTEGER,
