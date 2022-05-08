@@ -5,7 +5,7 @@ const ApiError = require("../../utils/apiError");
 const uploadImage = (folderName, fieldName) => {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, "./public/images/" + folderName);
+      cb(null, "./public/upload/images/" + folderName);
     },
     filename: (req, file, cb) => {
       cb(null, `${Date.now()}.${file.originalname.split(".").pop()}`);
