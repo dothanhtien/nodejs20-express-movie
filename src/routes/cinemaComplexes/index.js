@@ -14,6 +14,7 @@ const {
   validateUpdateCinemaComplexSchema,
   updateCinemaComplex,
 } = require("../../services/cinemaComplexes");
+const removeFile = require("../../utils/removeFile");
 
 const cinemaComplexRouter = express.Router();
 
@@ -154,8 +155,8 @@ cinemaComplexRouter.delete("/:id", [authenticate], async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const isExist = await checkCinemaComplexExistsById(id);
-    if (!isExist) {
+    const cinemaComplex = await getCinemaComplexById(id);
+    if (!cinemaComplex) {
       throw new ApiError(404, "Cinema complex does not exist");
     }
 
@@ -163,6 +164,12 @@ cinemaComplexRouter.delete("/:id", [authenticate], async (req, res, next) => {
     if (!isDeleted) {
       throw new ApiError(500, "Internal server error");
     }
+
+    // remove logo image
+    const {
+      dataValues: { logo: rawLogo },
+    } = cinemaComplex;
+    removeFile(rawLogo);
 
     res.json({
       status: "success",
