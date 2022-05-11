@@ -21,11 +21,45 @@ const validateCreateScreenSchema = () => {
   ];
 };
 
+const validateUpdateScreenSchema = () => {
+  return [
+    body("name")
+      .optional({ nullable: true })
+      .trim()
+      .notEmpty()
+      .withMessage("Screen name is required")
+      .isLength({ max: 255 })
+      .withMessage("Screen name exceeds 255 characters"),
+    body("cinemaId")
+      .optional({ nullable: true })
+      .notEmpty()
+      .withMessage("cinemaId is required")
+      .isInt()
+      .withMessage("cinemaId is invalid")
+      .toInt(),
+  ];
+};
+
+const checkScreenExistsById = async (id) => {
+  try {
+    const count = await Screen.count({
+      where: {
+        id,
+      },
+    });
+
+    return count > 0;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 const checkScreenExistsInCinemaByName = async (name, cinemaId) => {
   try {
     const count = await Screen.count({
       where: {
-        [Op.and]: [{ cinemaId }, { name }],
+        [Op.and]: [{ name }, { cinemaId }],
       },
     });
 
@@ -84,11 +118,29 @@ const updateScreen = async (data, id) => {
   }
 };
 
+const deleteScreenById = async (id) => {
+  try {
+    const isDeleted = await Screen.destroy({
+      where: {
+        id,
+      },
+    });
+
+    return isDeleted > 0;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 module.exports = {
   validateCreateScreenSchema,
+  validateUpdateScreenSchema,
+  checkScreenExistsById,
   checkScreenExistsInCinemaByName,
   createScreen,
   getScreens,
   getScreenById,
   updateScreen,
+  deleteScreenById,
 };
