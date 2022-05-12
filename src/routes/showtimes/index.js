@@ -7,6 +7,8 @@ const {
   createShowtime,
   checkShowtimeExistsById,
   deleteShowtimeById,
+  getShowtimes,
+  getShowtimeById,
 } = require("../../services/showtimes");
 const { getMovieById } = require("../../services/movies");
 const { checkScreenExistsById } = require("../../services/screens");
@@ -77,6 +79,46 @@ showtimeRouter.post(
     }
   }
 );
+
+showtimeRouter.get("/", [authenticate], async (req, res, next) => {
+  try {
+    const showtimes = await getShowtimes();
+    
+    if (!showtimes) {
+      throw new ApiError(500, "Internal server error");
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        showtimes,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+showtimeRouter.get("/:id", [authenticate], async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const showtime = await getShowtimeById(id);
+
+    if (!showtime) {
+      throw new ApiError(404, "Showtime does not exist");
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        showtime,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 showtimeRouter.delete("/:id", [authenticate], async (req, res, next) => {
   const { id } = req.params;
