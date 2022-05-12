@@ -1,12 +1,9 @@
-"use strict";
-const swaggerJSDoc = require("swagger-jsdoc");
-const swaggerDefinition = require("./swaggerDefinition");
+const basicInfo = require("./basicInfo");
+const components = require("./components");
+const paths = require("./paths");
 
-const options = {
-  swaggerDefinition,
-  // Paths to files containing OpenAPI definitions
-  apis: ["./src/routes/*/index.js"],
+module.exports = {
+  ...basicInfo,
+  ...components,
+  ...paths,
 };
-const swaggerSpec = swaggerJSDoc(options);
-
-module.exports = swaggerSpec;

@@ -1,5 +1,4 @@
-"use strict";
-const swaggerDefinition = {
+module.exports = {
   openapi: "3.0.0",
   info: {
     title: "Online Movie Ticket Booking System",
@@ -12,5 +11,3 @@ const swaggerDefinition = {
     },
   ],
 };
-
-module.exports = swaggerDefinition;
