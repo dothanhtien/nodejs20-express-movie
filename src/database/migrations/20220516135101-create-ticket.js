@@ -23,6 +23,7 @@ module.exports = {
           model: "Showtimes",
           key: "id",
         },
+        onDelete: "CASCADE",
       },
       seatId: {
         type: Sequelize.INTEGER,
