@@ -13,6 +13,30 @@ const createBooking = async (data) => {
   }
 };
 
+const getBookings = async () => {
+  try {
+    const bookings = await Booking.findAll();
+
+    return bookings;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
+const getBookingById = async (id) => {
+  try {
+    const booking = await Booking.findByPk(id);
+
+    return booking;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 module.exports = {
   createBooking,
+  getBookings,
+  getBookingById,
 };

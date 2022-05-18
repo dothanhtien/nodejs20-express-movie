@@ -1,7 +1,11 @@
 "use strict";
 const express = require("express");
 const { authenticate } = require("../../middlewares/auth");
-const { createBooking } = require("../../services/bookings");
+const {
+  createBooking,
+  getBookings,
+  getBookingById,
+} = require("../../services/bookings");
 const { getShowtimeById } = require("../../services/showtimes");
 const ApiError = require("../../utils/apiError");
 
@@ -33,6 +37,46 @@ bookingRouter.post("/", [authenticate], async (req, res, next) => {
     }
 
     const booking = await createBooking({ userId: req.user.id });
+
+    res.json({
+      status: "success",
+      data: {
+        booking,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+bookingRouter.get("/", [authenticate], async (req, res, next) => {
+  try {
+    const bookings = await getBookings();
+
+    if (!bookings) {
+      throw new ApiError(500, "Internal server error");
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        bookings,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+bookingRouter.get("/:id", [authenticate], async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const booking = await getBookingById(id);
+
+    if (!booking) {
+      throw new ApiError(404, "Booking does not exist");
+    }
 
     res.json({
       status: "success",
