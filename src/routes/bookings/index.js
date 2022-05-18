@@ -7,6 +7,7 @@ const {
   getBookingById,
 } = require("../../services/bookings");
 const { getShowtimeById } = require("../../services/showtimes");
+const { updateStatusOfTickets } = require("../../services/tickets");
 const ApiError = require("../../utils/apiError");
 
 const bookingRouter = express.Router();
@@ -36,7 +37,24 @@ bookingRouter.post("/", [authenticate], async (req, res, next) => {
       );
     }
 
-    const booking = await createBooking({ userId: req.user.id });
+    const booking = await createBooking({
+      userId: req.user.id,
+      bookingDetails: tickets.map((ticketId) => {
+        return { ticketId };
+      }),
+    });
+
+    if (!booking) {
+      throw new ApiError(500, "An error occurred while creating the booking");
+    }
+
+    const ticketsUpdated = await updateStatusOfTickets(true, tickets);
+    if (!ticketsUpdated) {
+      throw new ApiError(
+        500,
+        "An error occurred while updating the status of tickets"
+      );
+    }
 
     res.json({
       status: "success",

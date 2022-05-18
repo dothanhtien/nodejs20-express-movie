@@ -4,7 +4,14 @@ const ApiError = require("../../utils/apiError");
 
 const createBooking = async (data) => {
   try {
-    const booking = await Booking.create(data);
+    const booking = await Booking.create(data, {
+      include: [
+        {
+          association: "bookingDetails",
+          as: "bookingDetails",
+        },
+      ],
+    });
 
     return booking;
   } catch (error) {
