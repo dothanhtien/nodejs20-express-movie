@@ -31,8 +31,24 @@ userRouter.post(
       });
     }
 
-    const { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
-      req.body;
+    let {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      dateOfBirth,
+      role,
+    } = req.body;
+
+    if (!dateOfBirth) {
+      dateOfBirth = null;
+    }
+
+    // check if logged in user is admin
+    if (role !== "admin" || (role === "admin" && req.user.role !== "admin")) {
+      role = "user";
+    }
 
     try {
       const isExist = await checkUserExistsByEmail(email);
@@ -49,7 +65,12 @@ userRouter.post(
         password: hashedPassword,
         phoneNumber,
         dateOfBirth,
+        role,
       });
+
+      if (!user) {
+        throw new ApiError(500, "An error occurred while creating user");
+      }
 
       res.status(201).json({
         status: "success",

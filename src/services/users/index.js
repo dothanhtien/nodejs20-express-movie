@@ -37,7 +37,7 @@ const validateCreateUserSchema = () => {
       .isLength({ max: 30 })
       .withMessage("Phone number exceeds 30 characters"),
     body("dateOfBirth")
-      .optional({ nullable: true })
+      .optional({ checkFalsy: true })
       .isISO8601()
       .withMessage("Date of birth is invalid"),
   ];

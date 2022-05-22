@@ -74,8 +74,12 @@ authRouter.post(
       });
     }
 
-    const { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
+    let { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
       req.body;
+
+    if (!dateOfBirth) {
+      dateOfBirth = null;
+    }
 
     try {
       const isExist = await checkUserExistsByEmail(email);
@@ -94,6 +98,10 @@ authRouter.post(
         dateOfBirth,
         role: "user",
       });
+
+      if (!user) {
+        throw new ApiError(500, "An error occurred while signing up");
+      }
 
       res.status(201).json({
         status: "success",
