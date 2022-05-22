@@ -12,6 +12,11 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.BookingDetail, {
         foreignKey: "bookingId",
         as: "bookingDetails",
+        onDelete: "CASCADE",
+      });
+      this.belongsToMany(models.Ticket, {
+        through: models.BookingDetail,
+        foreignKey: "bookingId",
       });
     }
   }

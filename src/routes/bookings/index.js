@@ -5,6 +5,7 @@ const {
   createBooking,
   getBookings,
   getBookingById,
+  deleteBookingById,
 } = require("../../services/bookings");
 const { getShowtimeById } = require("../../services/showtimes");
 const { updateStatusOfTickets } = require("../../services/tickets");
@@ -101,6 +102,42 @@ bookingRouter.get("/:id", [authenticate], async (req, res, next) => {
       data: {
         booking,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+bookingRouter.delete("/:id", [authenticate], async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const booking = await getBookingById(id);
+    if (!booking) {
+      throw new ApiError(404, "Booking does not exist");
+    }
+
+    const tickets = await booking.getTickets();
+
+    const ticketsUpdated = await updateStatusOfTickets(
+      false,
+      tickets.map(({ id }) => id)
+    );
+    if (!ticketsUpdated) {
+      throw new ApiError(
+        500,
+        "An error occurred while updating the status of tickets"
+      );
+    }
+
+    const isBookingDeleted = await deleteBookingById(id);
+    if (!isBookingDeleted) {
+      throw new ApiError(500, "An error occurred while deleting the booking");
+    }
+
+    res.json({
+      status: "success",
+      message: "Booking deleted successfully",
     });
   } catch (error) {
     next(error);

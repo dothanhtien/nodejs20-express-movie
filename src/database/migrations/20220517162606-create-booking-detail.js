@@ -15,6 +15,7 @@ module.exports = {
           model: "Bookings",
           key: "id",
         },
+        onDelete: "CASCADE",
       },
       ticketId: {
         type: Sequelize.INTEGER,

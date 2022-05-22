@@ -42,8 +42,24 @@ const getBookingById = async (id) => {
   }
 };
 
+const deleteBookingById = async (id) => {
+  try {
+    const isDeleted = await Booking.destroy({
+      where: {
+        id,
+      },
+    });
+
+    return isDeleted > 0;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 module.exports = {
   createBooking,
   getBookings,
   getBookingById,
+  deleteBookingById,
 };
