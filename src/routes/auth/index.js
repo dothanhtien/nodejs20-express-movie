@@ -36,12 +36,18 @@ authRouter.post("/sign-in", validateSignInSchema(), async (req, res, next) => {
       throw new ApiError(400, "Email or password is invalid");
     }
 
-    const isMatch = await comparePassword(password, user.password);
+    const isMatch = comparePassword(password, user.password);
     if (!isMatch) {
       throw new ApiError(400, "Email or password is invalid");
     }
 
     const accessToken = generateAccessToken(user.id);
+    if (!accessToken) {
+      throw new ApiError(
+        500,
+        "An error occurred while generating access token"
+      );
+    }
 
     res.json({
       status: "success",
@@ -68,8 +74,12 @@ authRouter.post(
       });
     }
 
-    const { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
+    let { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
       req.body;
+
+    if (!dateOfBirth) {
+      dateOfBirth = null;
+    }
 
     try {
       const isExist = await checkUserExistsByEmail(email);
@@ -88,6 +98,10 @@ authRouter.post(
         dateOfBirth,
         role: "user",
       });
+
+      if (!user) {
+        throw new ApiError(500, "An error occurred while signing up");
+      }
 
       res.status(201).json({
         status: "success",

@@ -1,35 +1,18 @@
 "use strict";
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Tickets", {
+    await queryInterface.createTable("Bookings", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      status: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
-      price: {
-        type: Sequelize.INTEGER,
-        defaultValue: 0,
-      },
-      showtimeId: {
+      userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "Showtimes",
-          key: "id",
-        },
-        onDelete: "CASCADE",
-      },
-      seatId: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: "Seats",
+          model: "Users",
           key: "id",
         },
       },
@@ -44,6 +27,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Tickets");
+    await queryInterface.dropTable("Bookings");
   },
 };
