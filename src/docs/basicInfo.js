@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 module.exports = {
   openapi: "3.0.0",
   info: {
@@ -8,6 +10,10 @@ module.exports = {
     {
       url: "http://localhost:8080/api",
       description: "Development server",
+    },
+    {
+      url: process.env.BASE_URL + "/api",
+      description: "Production server",
     },
   ],
 };
