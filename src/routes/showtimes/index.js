@@ -14,6 +14,7 @@ const { getMovieById } = require("../../services/movies");
 const { checkScreenExistsById } = require("../../services/screens");
 const ApiError = require("../../utils/apiError");
 const { validationResult } = require("express-validator");
+const { getSeatsByScreenId } = require("../../services/seats");
 
 const showtimeRouter = express.Router();
 
@@ -30,7 +31,10 @@ showtimeRouter.post(
       });
     }
 
-    const { movieId, screenId, startTime } = req.body;
+    let { movieId, screenId, startTime, price } = req.body;
+
+    // return price = 0 instead of 'null' or 'not returned' when creating new showtime without supplying price
+    if (!price) price = 0;
 
     try {
       const movie = await getMovieById(movieId);
@@ -57,11 +61,21 @@ showtimeRouter.post(
         throw new ApiError(400, "Screen is not available during this time");
       }
 
+      const seats = await getSeatsByScreenId(screenId);
+      const tickets = seats.map((seat) => {
+        return {
+          price,
+          status: false,
+          seatId: seat.id,
+        };
+      });
+
       const showtime = await createShowtime({
         movieId,
         screenId,
         startTime,
         endTime,
+        tickets,
       });
 
       if (!showtime) {
@@ -83,7 +97,7 @@ showtimeRouter.post(
 showtimeRouter.get("/", [authenticate], async (req, res, next) => {
   try {
     const showtimes = await getShowtimes();
-    
+
     if (!showtimes) {
       throw new ApiError(500, "Internal server error");
     }

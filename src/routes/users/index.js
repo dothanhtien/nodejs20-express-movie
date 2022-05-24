@@ -5,7 +5,6 @@ const {
   validateCreateUserSchema,
   validateUpdateUserSchema,
   checkUserExistsByEmail,
-  checkUserExistsById,
   createUser,
   getUsers,
   getUserById,
@@ -31,8 +30,24 @@ userRouter.post(
       });
     }
 
-    const { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
-      req.body;
+    let {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      dateOfBirth,
+      role,
+    } = req.body;
+
+    if (!dateOfBirth) {
+      dateOfBirth = null;
+    }
+
+    // check if logged in user is admin
+    if (role !== "admin" || (role === "admin" && req.user.role !== "admin")) {
+      role = "user";
+    }
 
     try {
       const isExist = await checkUserExistsByEmail(email);
@@ -49,7 +64,12 @@ userRouter.post(
         password: hashedPassword,
         phoneNumber,
         dateOfBirth,
+        role,
       });
+
+      if (!user) {
+        throw new ApiError(500, "An error occurred while creating user");
+      }
 
       res.status(201).json({
         status: "success",
@@ -182,16 +202,25 @@ userRouter.delete("/:id", [authenticate], async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const isExist = await checkUserExistsById(id);
-
-    if (!isExist) {
+    const user = await getUserById(id);
+    if (!user) {
       throw new ApiError(404, "User does not exist");
     }
 
-    const isDeleted = await deleteUserById(id);
+    if (req.user.id === user.id) {
+      throw new ApiError(
+        400,
+        "This action is not allowed, a user cannot self-delete"
+      );
+    }
 
+    if (req.user.role === "user" && user.role === "admin") {
+      throw new ApiError(403, "You don't have permission to delete this user");
+    }
+
+    const isDeleted = await deleteUserById(id);
     if (!isDeleted) {
-      throw new ApiError(500, "Internal server error");
+      throw new ApiError(500, "An error occurred while deleting user");
     }
 
     res.json({

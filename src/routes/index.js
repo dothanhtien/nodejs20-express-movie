@@ -1,6 +1,7 @@
 "use strict";
 const express = require("express");
 const authRouter = require("./auth");
+const bookingRouter = require("./bookings");
 const cinemaComplexRouter = require("./cinemaComplexes");
 const cinemaRouter = require("./cinemas");
 const movieRouter = require("./movies");
@@ -17,5 +18,6 @@ rootRouter.use("/cinema-complexes", cinemaComplexRouter);
 rootRouter.use("/cinemas", cinemaRouter);
 rootRouter.use("/screens", screenRouter);
 rootRouter.use("/showtimes", showtimeRouter);
+rootRouter.use("/bookings", bookingRouter);
 
 module.exports = rootRouter;

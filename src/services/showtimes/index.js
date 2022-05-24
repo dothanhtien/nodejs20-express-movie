@@ -7,6 +7,7 @@ const {
   Cinema,
   Screen,
   Movie,
+  Ticket,
 } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
 
@@ -22,6 +23,11 @@ const validateCreateShowtimeSchema = () => {
       .withMessage("screenId is required")
       .isInt()
       .withMessage("screenId is invalid"),
+    body("price")
+      .optional({ nullable: true })
+      .isInt()
+      .withMessage("Price is invalid")
+      .toInt(),
   ];
 };
 
@@ -69,7 +75,14 @@ const checkScreenAvailable = async (screenId, startTime, endTime) => {
 
 const createShowtime = async (data) => {
   try {
-    const showtime = await Showtime.create(data);
+    const showtime = await Showtime.create(data, {
+      include: [
+        {
+          association: "tickets",
+          as: "tickets",
+        },
+      ],
+    });
 
     return showtime;
   } catch (error) {
