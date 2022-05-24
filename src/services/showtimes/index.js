@@ -113,27 +113,42 @@ const getShowtimes = async () => {
   }
 };
 
+const getShowtimeById = async (id) => {
+  try {
+    const showtime = await Showtime.findByPk(id, {
+      attributes: { exclude: ["movieId", "screenId"] },
+      include: [
+        {
+          model: Movie,
+          as: "movie",
+        },
+        {
+          model: Screen,
+          as: "screen",
+        },
+        {
+          model: Ticket,
+          as: "tickets",
+        },
+      ],
+    });
+
+    return showtime;
+  } catch (error) {
+    throw new ErrorHandler(500, "Internal server error");
+  }
+};
+
 const getShowtimesByMovieId = async (movieId) => {
   try {
-    const cinemaComplexShowtimes = await CinemaComplex.findAll({
+    const movieShowtimes = await CinemaComplex.findAll({
       include: {
         model: Cinema,
         as: "cinemas",
-        attributes: {
-          exclude: [
-            "address",
-            "phoneNumber",
-            "rating",
-            "description",
-            "cinemaComplexId",
-          ],
-        },
         include: {
           model: Screen,
           as: "screens",
-          attributes: {
-            exclude: ["cinemaId"],
-          },
+          required: true,
           include: {
             where: {
               movieId,
@@ -148,32 +163,10 @@ const getShowtimesByMovieId = async (movieId) => {
       },
     });
 
-    return cinemaComplexShowtimes;
+    return movieShowtimes;
   } catch (error) {
     console.log(error);
     throw new ApiError(500, "Internal server error");
-  }
-};
-
-const getShowtimeById = async (id) => {
-  try {
-    const showtime = await Showtime.findByPk(id, {
-      attributes: { exclude: ["movieId", "screenId"] },
-      include: [
-        {
-          model: Movie,
-          as: "movie",
-        },
-        {
-          model: Screen,
-          as: "screen",
-        },
-      ],
-    });
-
-    return showtime;
-  } catch (error) {
-    throw new ErrorHandler(500, "Internal server error");
   }
 };
 
