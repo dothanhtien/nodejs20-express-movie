@@ -118,8 +118,39 @@ authRouter.post(
 authRouter.get("/me", [authenticate], (req, res, next) => {
   try {
     res.json({
+      status: "success",
       data: {
         user: req.user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.get("/my-bookings", [authenticate], async (req, res, next) => {
+  const { user } = req;
+
+  try {
+    const bookings = await user.getBookings({
+      include: [
+        {
+          association: "tickets",
+          as: "tickets",
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    if (!bookings) {
+      throw new ApiError(500, "An error occurred while fetching bookings");
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        user,
+        bookings,
       },
     });
   } catch (error) {
