@@ -2,6 +2,7 @@ module.exports = {
   "/auth/me": {
     get: {
       tags: ["Auth"],
+      security: [{ bearerAuth: [] }],
       responses: {
         200: {
           description: "Success",

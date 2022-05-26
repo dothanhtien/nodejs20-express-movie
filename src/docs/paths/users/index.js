@@ -1,20 +1,17 @@
+const getUsers = require("./getUsers");
+const createUser = require("./createUser");
+const getUser = require("./getUser");
+const updateUser = require("./updateUser");
+const deleteUser = require("./deleteUser");
+
 module.exports = {
   "/users": {
-    get: {
-      tags: ["Users"],
-      summary: "Return a list of users",
-      responses: {
-        200: {
-          description: "Success",
-          content: {
-            "application/json": {
-              schema: {
-                $ref: "#/components/schemas/User",
-              },
-            },
-          },
-        },
-      },
-    },
+    ...getUsers,
+    ...createUser,
+  },
+  "/users/{id}": {
+    ...getUser,
+    ...updateUser,
+    ...deleteUser,
   },
 };
