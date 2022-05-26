@@ -1,6 +1,31 @@
 "use strict";
+const { body } = require("express-validator");
 const { Booking, Ticket, User } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
+
+const validateCreateBookingSchema = () => {
+  return [
+    body("showtimeId")
+      .trim()
+      .notEmpty()
+      .withMessage("showtimeId is required")
+      .isInt()
+      .withMessage("showtimeId is invalid")
+      .toInt(),
+    body("tickets")
+      .notEmpty()
+      .withMessage("tickets are required")
+      .isArray()
+      .withMessage("tickets is not in the correct format"),
+    body("tickets.*.ticketId")
+      .trim()
+      .notEmpty()
+      .withMessage("ticketId is required")
+      .isInt()
+      .withMessage("ticketId is invalid")
+      .toInt(),
+  ];
+};
 
 const createBooking = async (data) => {
   try {
@@ -86,6 +111,7 @@ const deleteBookingById = async (id) => {
 };
 
 module.exports = {
+  validateCreateBookingSchema,
   createBooking,
   getBookings,
   getBookingById,

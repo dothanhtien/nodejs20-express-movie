@@ -7,6 +7,10 @@
 3. Run command: `yarn`
 4. Run custom command: `yarn db:init`
 
+Other commands:
+
+1.  To destroy the tables and rerun migration and seed scripts `yarn db:reset`
+
 ## II. .env file content
 
 ```
@@ -35,4 +39,9 @@ PROD_DB_DIALECT="mysql"
 
 JWT_SECRET="secret-key"
 JWT_TOKEN_EXPIRATION=86400
+
+CLOUDINARY_CLOUD_NAME="cloud_name"
+CLOUDINARY_API_KEY="api_key"
+CLOUDINARY_API_SECRET="api_secret"
+CLOUDINARY_FOLDER_NAME="omtbs"
 ```

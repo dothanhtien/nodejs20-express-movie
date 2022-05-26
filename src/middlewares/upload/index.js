@@ -1,16 +1,24 @@
 "use strict";
+require("dotenv").config();
 const multer = require("multer");
+const { cloudinaryStorage } = require("../../configs/cloudinary");
 const ApiError = require("../../utils/apiError");
 
 const uploadImage = (folderName, fieldName) => {
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, "./public/upload/images/" + folderName);
-    },
-    filename: (req, file, cb) => {
-      cb(null, `${Date.now()}.${file.originalname.split(".").pop()}`);
-    },
-  });
+  let storage = null;
+
+  if (process.env.NODE_ENV === "production") {
+    storage = cloudinaryStorage;
+  } else {
+    storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, "./public/upload/images/" + folderName);
+      },
+      filename: (req, file, cb) => {
+        cb(null, `${Date.now()}.${file.originalname.split(".").pop()}`);
+      },
+    });
+  }
 
   const upload = multer({
     storage,

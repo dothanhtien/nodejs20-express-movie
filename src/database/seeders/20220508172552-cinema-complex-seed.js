@@ -1,43 +1,50 @@
 "use strict";
-
+require("dotenv").config();
 module.exports = {
   async up(queryInterface, Sequelize) {
+    let baseUrl = "";
+    if (process.env.NODE_ENV === "development") {
+      baseUrl = "";
+    } else {
+      baseUrl = process.env.BASE_URL + "/";
+    }
+
     await queryInterface.bulkInsert(
       "CinemaComplexes",
       [
         {
           name: "CGV",
-          logo: "public/default/images/cinemaComplexes/cgv.jpeg",
+          logo: `${baseUrl}public/default/images/cinemaComplexes/cgv.jpeg`,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           name: "BHD Star Cineplex",
-          logo: "public/default/images/cinemaComplexes/bhd-cineplex.png",
+          logo: `${baseUrl}public/default/images/cinemaComplexes/bhd-cineplex.png`,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           name: "Galaxy Cinema",
-          logo: "public/default/images/cinemaComplexes/galaxy-cinema.png",
+          logo: `${baseUrl}public/default/images/cinemaComplexes/galaxy-cinema.png`,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           name: "Lotte Cinema",
-          logo: "public/default/images/cinemaComplexes/lotte-cinema.png",
+          logo: `${baseUrl}public/default/images/cinemaComplexes/lotte-cinema.png`,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           name: "CineStar",
-          logo: "public/default/images/cinemaComplexes/cine-star.png",
+          logo: `${baseUrl}public/default/images/cinemaComplexes/cine-star.png`,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           name: "Mega GS",
-          logo: "public/default/images/cinemaComplexes/mega-gs.png",
+          logo: `${baseUrl}public/default/images/cinemaComplexes/mega-gs.png`,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
