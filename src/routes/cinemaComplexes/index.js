@@ -9,7 +9,6 @@ const {
   createCinemaComplex,
   getCinemaComplexes,
   getCinemaComplexById,
-  checkCinemaComplexExistsById,
   deleteCinemaComplexById,
   validateUpdateCinemaComplexSchema,
   updateCinemaComplex,
@@ -160,16 +159,12 @@ cinemaComplexRouter.delete("/:id", [authenticate], async (req, res, next) => {
       throw new ApiError(404, "Cinema complex does not exist");
     }
 
+    await removeFile(cinemaComplex.logo);
+
     const isDeleted = await deleteCinemaComplexById(id);
     if (!isDeleted) {
       throw new ApiError(500, "Internal server error");
     }
-
-    // remove logo image
-    const {
-      dataValues: { logo: rawLogo },
-    } = cinemaComplex;
-    removeFile(rawLogo);
 
     res.json({
       status: "success",
