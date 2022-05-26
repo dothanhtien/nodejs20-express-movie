@@ -7,6 +7,10 @@
 3. Run command: `yarn`
 4. Run custom command: `yarn db:init`
 
+Other commands:
+
+1.  To destroy the tables and rerun migration and seed scripts `yarn db:reset`
+
 ## II. .env file content
 
 ```
