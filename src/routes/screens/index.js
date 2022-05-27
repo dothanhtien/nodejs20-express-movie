@@ -1,7 +1,7 @@
 "use strict";
 const express = require("express");
-const { validationResult } = require("express-validator");
 const { authenticate } = require("../../middlewares/auth");
+const { validate } = require("../../middlewares/validator");
 const {
   getScreens,
   getScreenById,
@@ -20,17 +20,8 @@ const screenRouter = express.Router();
 
 screenRouter.post(
   "/",
-  [authenticate, validateCreateScreenSchema()],
+  [authenticate, validateCreateScreenSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { name, cinemaId } = req.body;
 
     try {
@@ -106,17 +97,8 @@ screenRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 screenRouter.put(
   "/:id",
-  [authenticate, validateUpdateScreenSchema()],
+  [authenticate, validateUpdateScreenSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { id } = req.params;
     const { name, cinemaId } = req.body;
     const updates = { name, cinemaId };
