@@ -2,6 +2,7 @@ const getShowtimes = require("./getShowtimes");
 const createShowtime = require("./createShowtime");
 const getShowtime = require("./getShowtime");
 const deleteShowtime = require("./deleteShowtime");
+const getShowtimesOfMovie = require("./getShowtimesOfMovie");
 
 module.exports = {
   "/showtimes": {
@@ -11,5 +12,8 @@ module.exports = {
   "/showtimes/{id}": {
     ...getShowtime,
     ...deleteShowtime,
+  },
+  "/movies/{id}/showtimes": {
+    ...getShowtimesOfMovie,
   },
 };
