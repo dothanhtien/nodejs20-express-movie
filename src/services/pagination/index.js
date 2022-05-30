@@ -4,11 +4,13 @@ const { query } = require("express-validator");
 const validatePagingQueries = () => {
   return [
     query("page")
+      .optional({ checkFalsy: true })
       .isInt()
       .withMessage("Page query param should be a number")
       .isInt({ min: 1 })
       .withMessage("Page query param should be greater than or equal to 0"),
     query("limit")
+      .optional({ checkFalsy: true })
       .isInt()
       .withMessage("Limit query param should be a number")
       .isInt({ min: 1 })
