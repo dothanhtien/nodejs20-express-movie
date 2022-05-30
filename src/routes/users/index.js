@@ -1,6 +1,5 @@
 "use strict";
 const express = require("express");
-const { validationResult } = require("express-validator");
 const {
   validateCreateUserSchema,
   validateUpdateUserSchema,
@@ -14,22 +13,14 @@ const {
 const { hashPassword } = require("../../services/auth");
 const ApiError = require("../../utils/apiError");
 const { authenticate } = require("../../middlewares/auth");
+const { validate } = require("../../middlewares/validator");
 
 const userRouter = express.Router();
 
 userRouter.post(
   "/",
-  [authenticate, validateCreateUserSchema()],
+  [authenticate, validateCreateUserSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     let {
       firstName,
       lastName,
@@ -121,17 +112,8 @@ userRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 userRouter.put(
   "/:id",
-  [authenticate, validateUpdateUserSchema()],
+  [authenticate, validateUpdateUserSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { id } = req.params;
     const { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
       req.body;

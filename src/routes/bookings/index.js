@@ -1,7 +1,7 @@
 "use strict";
 const express = require("express");
-const { validationResult } = require("express-validator");
 const { authenticate } = require("../../middlewares/auth");
+const { validate } = require("../../middlewares/validator");
 const {
   createBooking,
   getBookings,
@@ -17,17 +17,8 @@ const bookingRouter = express.Router();
 
 bookingRouter.post(
   "/",
-  [authenticate, validateCreateBookingSchema()],
+  [authenticate, validateCreateBookingSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { showtimeId, tickets } = req.body;
 
     try {

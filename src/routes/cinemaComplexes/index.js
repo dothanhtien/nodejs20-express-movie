@@ -1,8 +1,8 @@
 "use strict";
 const express = require("express");
-const { validationResult } = require("express-validator");
 const { authenticate } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
+const { validate } = require("../../middlewares/validator");
 const ApiError = require("../../utils/apiError");
 const {
   validateCreateCinemaComplexSchema,
@@ -23,17 +23,9 @@ cinemaComplexRouter.post(
     authenticate,
     uploadImage("cinemaComplexes", "logo"),
     validateCreateCinemaComplexSchema(),
+    validate,
   ],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { name } = req.body;
     const logo = req.file?.path || null;
 
@@ -98,17 +90,9 @@ cinemaComplexRouter.put(
     authenticate,
     uploadImage("cinemaComplexes", "logo"),
     validateUpdateCinemaComplexSchema(),
+    validate,
   ],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { id } = req.params;
     const { name } = req.body;
     const updates = { name };

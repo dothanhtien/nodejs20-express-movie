@@ -7,13 +7,12 @@ const {
   getMovieById,
   updateMovie,
   validateUpdateMovieSchema,
-  checkMovieExistsById,
   deleteMovie,
 } = require("../../services/movies");
 const { getShowtimesByMovieId } = require("../../services/showtimes");
 const { authenticate } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
-const { validationResult } = require("express-validator");
+const { validate } = require("../../middlewares/validator");
 const removeFile = require("../../utils/removeFile");
 const ApiError = require("../../utils/apiError");
 
@@ -21,17 +20,13 @@ const movieRouter = express.Router();
 
 movieRouter.post(
   "/",
-  [authenticate, uploadImage("movies", "poster"), validateCreateMovieSchema()],
+  [
+    authenticate,
+    uploadImage("movies", "poster"),
+    validateCreateMovieSchema(),
+    validate,
+  ],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const {
       name,
       description,
@@ -110,17 +105,8 @@ movieRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 movieRouter.put(
   "/:id",
-  [authenticate, validateUpdateMovieSchema()],
+  [authenticate, validateUpdateMovieSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { id } = req.params;
     const {
       name,

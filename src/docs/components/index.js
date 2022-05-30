@@ -1,16 +1,11 @@
+const schemas = require("./schemas");
 const securitySchemes = require("./securitySchemes");
-const User = require("./user");
-const Movie = require("./movie");
-const CinemaComplex = require("./cinemaComplex");
-const Cinema = require("./cinema");
+const requestBodies = require("./requestBodies");
+
 module.exports = {
   components: {
-    schemas: {
-      ...User,
-      ...Movie,
-      ...CinemaComplex,
-      ...Cinema,
-    },
+    schemas,
     securitySchemes,
+    requestBodies,
   },
 };
