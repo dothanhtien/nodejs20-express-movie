@@ -1,7 +1,9 @@
 "use strict";
+const { Op } = require("sequelize");
 const { body } = require("express-validator");
 const { User } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
+const { getPagingData, getPagination } = require("../pagination");
 
 const validateCreateUserSchema = () => {
   return [
@@ -126,11 +128,33 @@ const createUser = async (data) => {
   }
 };
 
-const getUsers = async () => {
+const getUsers = async (email) => {
+  const condition = email ? { email: { [Op.like]: `%${email}%` } } : null;
+
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({
+      where: condition,
+    });
 
     return users;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
+const getUsersWithPagination = async (email, page, size) => {
+  const condition = email ? { email: { [Op.like]: `%${email}%` } } : null;
+  const { limit, offset } = getPagination(page, size);
+
+  try {
+    const data = await User.findAndCountAll({
+      where: condition,
+      limit,
+      offset,
+    });
+
+    return getPagingData(data, page, limit, "users");
   } catch (error) {
     console.log(error);
     throw new ApiError(500, "Internal server error");
@@ -200,6 +224,7 @@ module.exports = {
   checkUserExistsById,
   createUser,
   getUsers,
+  getUsersWithPagination,
   getUserById,
   getUserByEmail,
   updateUser,
