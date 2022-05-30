@@ -6,7 +6,7 @@ module.exports = {
     const cinemas = await getCinemas();
     const screens = [];
     cinemas.forEach((cinema) => {
-      for (let i = 1; i <= 6; i++) {
+      for (let i = 1; i <= 2; i++) {
         screens.push({
           name: `Screen ${i}`,
           cinemaId: cinema.id,

@@ -1,6 +1,5 @@
 "use strict";
 const express = require("express");
-const { validationResult } = require("express-validator");
 const {
   getUserByEmail,
   validateCreateUserSchema,
@@ -15,65 +14,52 @@ const {
 } = require("../../services/auth");
 const ApiError = require("../../utils/apiError");
 const { authenticate } = require("../../middlewares/auth");
+const { validate } = require("../../middlewares/validator");
 
 const authRouter = express.Router();
 
-authRouter.post("/sign-in", validateSignInSchema(), async (req, res, next) => {
-  const errors = validationResult(req);
+authRouter.post(
+  "/sign-in",
+  [validateSignInSchema(), validate],
+  async (req, res, next) => {
+    const { email, password } = req.body;
 
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      status: "error",
-      errors: errors.mapped(),
-    });
+    try {
+      const user = await getUserByEmail(email);
+      if (!user) {
+        throw new ApiError(400, "Email or password is invalid");
+      }
+
+      const isMatch = comparePassword(password, user.password);
+      if (!isMatch) {
+        throw new ApiError(400, "Email or password is invalid");
+      }
+
+      const accessToken = generateAccessToken(user.id);
+      if (!accessToken) {
+        throw new ApiError(
+          500,
+          "An error occurred while generating access token"
+        );
+      }
+
+      res.json({
+        status: "success",
+        data: {
+          user,
+          accessToken,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-
-  const { email, password } = req.body;
-
-  try {
-    const user = await getUserByEmail(email);
-    if (!user) {
-      throw new ApiError(400, "Email or password is invalid");
-    }
-
-    const isMatch = comparePassword(password, user.password);
-    if (!isMatch) {
-      throw new ApiError(400, "Email or password is invalid");
-    }
-
-    const accessToken = generateAccessToken(user.id);
-    if (!accessToken) {
-      throw new ApiError(
-        500,
-        "An error occurred while generating access token"
-      );
-    }
-
-    res.json({
-      status: "success",
-      data: {
-        user,
-        accessToken,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+);
 
 authRouter.post(
   "/sign-up",
-  validateCreateUserSchema(),
+  [validateCreateUserSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     let { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
       req.body;
 
@@ -118,8 +104,39 @@ authRouter.post(
 authRouter.get("/me", [authenticate], (req, res, next) => {
   try {
     res.json({
+      status: "success",
       data: {
         user: req.user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.get("/my-bookings", [authenticate], async (req, res, next) => {
+  const { user } = req;
+
+  try {
+    const bookings = await user.getBookings({
+      include: [
+        {
+          association: "tickets",
+          as: "tickets",
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    if (!bookings) {
+      throw new ApiError(500, "An error occurred while fetching bookings");
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        user,
+        bookings,
       },
     });
   } catch (error) {

@@ -1,6 +1,7 @@
 "use strict";
 const express = require("express");
 const { authenticate } = require("../../middlewares/auth");
+const { validate } = require("../../middlewares/validator");
 const {
   validateCreateShowtimeSchema,
   checkScreenAvailable,
@@ -13,24 +14,14 @@ const {
 const { getMovieById } = require("../../services/movies");
 const { checkScreenExistsById } = require("../../services/screens");
 const ApiError = require("../../utils/apiError");
-const { validationResult } = require("express-validator");
 const { getSeatsByScreenId } = require("../../services/seats");
 
 const showtimeRouter = express.Router();
 
 showtimeRouter.post(
   "/",
-  [authenticate, validateCreateShowtimeSchema()],
+  [authenticate, validateCreateShowtimeSchema(), validate],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     let { movieId, screenId, startTime, price } = req.body;
 
     // return price = 0 instead of 'null' or 'not returned' when creating new showtime without supplying price

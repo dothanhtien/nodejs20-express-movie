@@ -1,15 +1,14 @@
 "use strict";
 const express = require("express");
-const { validationResult } = require("express-validator");
 const { authenticate } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
+const { validate } = require("../../middlewares/validator");
 const ApiError = require("../../utils/apiError");
 const {
   validateCreateCinemaComplexSchema,
   createCinemaComplex,
   getCinemaComplexes,
   getCinemaComplexById,
-  checkCinemaComplexExistsById,
   deleteCinemaComplexById,
   validateUpdateCinemaComplexSchema,
   updateCinemaComplex,
@@ -24,17 +23,9 @@ cinemaComplexRouter.post(
     authenticate,
     uploadImage("cinemaComplexes", "logo"),
     validateCreateCinemaComplexSchema(),
+    validate,
   ],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { name } = req.body;
     const logo = req.file?.path || null;
 
@@ -99,17 +90,9 @@ cinemaComplexRouter.put(
     authenticate,
     uploadImage("cinemaComplexes", "logo"),
     validateUpdateCinemaComplexSchema(),
+    validate,
   ],
   async (req, res, next) => {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.mapped(),
-      });
-    }
-
     const { id } = req.params;
     const { name } = req.body;
     const updates = { name };
@@ -160,16 +143,12 @@ cinemaComplexRouter.delete("/:id", [authenticate], async (req, res, next) => {
       throw new ApiError(404, "Cinema complex does not exist");
     }
 
+    await removeFile(cinemaComplex.logo);
+
     const isDeleted = await deleteCinemaComplexById(id);
     if (!isDeleted) {
       throw new ApiError(500, "Internal server error");
     }
-
-    // remove logo image
-    const {
-      dataValues: { logo: rawLogo },
-    } = cinemaComplex;
-    removeFile(rawLogo);
 
     res.json({
       status: "success",

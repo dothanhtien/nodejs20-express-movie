@@ -1,4 +1,5 @@
 "use strict";
+require("dotenv").config();
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class CinemaComplex extends Model {
@@ -21,7 +22,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         get() {
           const rawValue = this.getDataValue("logo");
-          return rawValue ? `${process.env.BASE_URL}/${rawValue}` : null;
+          if (process.env.NODE_ENV === "production") {
+            return rawValue ? rawValue : null;
+          } else {
+            return rawValue ? `${process.env.BASE_URL}/${rawValue}` : null;
+          }
         },
       },
     },

@@ -1,11 +1,13 @@
 "use strict";
 const express = require("express");
 const { authenticate } = require("../../middlewares/auth");
+const { validate } = require("../../middlewares/validator");
 const {
   createBooking,
   getBookings,
   getBookingById,
   deleteBookingById,
+  validateCreateBookingSchema,
 } = require("../../services/bookings");
 const { getShowtimeById } = require("../../services/showtimes");
 const { updateStatusOfTickets } = require("../../services/tickets");
@@ -13,60 +15,65 @@ const ApiError = require("../../utils/apiError");
 
 const bookingRouter = express.Router();
 
-bookingRouter.post("/", [authenticate], async (req, res, next) => {
-  const { showtimeId, tickets } = req.body;
+bookingRouter.post(
+  "/",
+  [authenticate, validateCreateBookingSchema(), validate],
+  async (req, res, next) => {
+    const { showtimeId, tickets } = req.body;
 
-  try {
-    const showtime = await getShowtimeById(showtimeId);
-    if (!showtime) {
-      throw new ApiError(404, "Showtime does not exist");
-    }
+    try {
+      const showtime = await getShowtimeById(showtimeId);
+      if (!showtime) {
+        throw new ApiError(404, "Showtime does not exist");
+      }
 
-    const ticketsOfShowtime = await showtime.getTickets();
+      const ticketsOfShowtime = await showtime.getTickets();
 
-    const availableTickets = ticketsOfShowtime
-      .filter((ticket) => !ticket.status)
-      .map((ticket) => ticket.id);
+      const availableTickets = ticketsOfShowtime
+        .filter((ticket) => !ticket.status)
+        .map((ticket) => ticket.id);
 
-    const ticketsValid = tickets.every((ticket) =>
-      availableTickets.includes(ticket)
-    );
-    if (!ticketsValid) {
-      throw new ApiError(
-        400,
-        "The ticket list is not valid, please check again"
+      const ticketsValid = tickets.every(({ ticketId }) =>
+        availableTickets.includes(ticketId)
       );
-    }
+      if (!ticketsValid) {
+        throw new ApiError(
+          400,
+          "The ticket list is not valid, please check again"
+        );
+      }
 
-    const booking = await createBooking({
-      userId: req.user.id,
-      bookingDetails: tickets.map((ticketId) => {
-        return { ticketId };
-      }),
-    });
+      const booking = await createBooking({
+        userId: req.user.id,
+        bookingDetails: tickets,
+      });
 
-    if (!booking) {
-      throw new ApiError(500, "An error occurred while creating the booking");
-    }
+      if (!booking) {
+        throw new ApiError(500, "An error occurred while creating the booking");
+      }
 
-    const ticketsUpdated = await updateStatusOfTickets(true, tickets);
-    if (!ticketsUpdated) {
-      throw new ApiError(
-        500,
-        "An error occurred while updating the status of tickets"
+      const ticketsUpdated = await updateStatusOfTickets(
+        true,
+        tickets.map(({ ticketId }) => ticketId)
       );
-    }
+      if (!ticketsUpdated) {
+        throw new ApiError(
+          500,
+          "An error occurred while updating the status of tickets"
+        );
+      }
 
-    res.json({
-      status: "success",
-      data: {
-        booking,
-      },
-    });
-  } catch (error) {
-    next(error);
+      res.json({
+        status: "success",
+        data: {
+          booking,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 bookingRouter.get("/", [authenticate], async (req, res, next) => {
   try {
