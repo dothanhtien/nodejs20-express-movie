@@ -9,8 +9,10 @@ const {
   getUserById,
   updateUser,
   deleteUserById,
+  getUsersWithPagination,
 } = require("../../services/users");
 const { hashPassword } = require("../../services/auth");
+const { validatePagingQueries } = require("../../services/pagination");
 const ApiError = require("../../utils/apiError");
 const { authenticate } = require("../../middlewares/auth");
 const { validate } = require("../../middlewares/validator");
@@ -74,9 +76,11 @@ userRouter.post(
   }
 );
 
-userRouter.get("/", [authenticate], async (req, res, next) => {
+userRouter.get("/getAll", [authenticate], async (req, res, next) => {
+  const { email } = req.query;
+
   try {
-    const users = await getUsers();
+    const users = await getUsers(email);
 
     res.json({
       status: "success",
@@ -88,6 +92,25 @@ userRouter.get("/", [authenticate], async (req, res, next) => {
     next(error);
   }
 });
+
+userRouter.get(
+  "/",
+  [authenticate, validatePagingQueries(), validate],
+  async (req, res, next) => {
+    const { email, page, limit } = req.query;
+
+    try {
+      const data = await getUsersWithPagination(email, page, limit);
+
+      res.json({
+        status: "success",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 userRouter.get("/:id", [authenticate], async (req, res, next) => {
   const { id } = req.params;
