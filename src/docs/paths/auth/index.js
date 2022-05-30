@@ -3,7 +3,13 @@ const signIn = require("./signIn");
 const signUp = require("./signUp");
 
 module.exports = {
-  ...signIn,
-  ...signUp,
-  ...getMe,
+  "/auth/sign-in": {
+    ...signIn,
+  },
+  "/auth/sign-up": {
+    ...signUp,
+  },
+  "/auth/me": {
+    ...getMe,
+  },
 };
