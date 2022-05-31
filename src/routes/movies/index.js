@@ -8,6 +8,7 @@ const {
   updateMovie,
   validateUpdateMovieSchema,
   deleteMovie,
+  getMoviesWithPagination,
 } = require("../../services/movies");
 const { getShowtimesByMovieId } = require("../../services/showtimes");
 const { authenticate } = require("../../middlewares/auth");
@@ -15,6 +16,7 @@ const { uploadImage } = require("../../middlewares/upload");
 const { validate } = require("../../middlewares/validator");
 const removeFile = require("../../utils/removeFile");
 const ApiError = require("../../utils/apiError");
+const { validatePagingQueries } = require("../../services/pagination");
 
 const movieRouter = express.Router();
 
@@ -67,9 +69,11 @@ movieRouter.post(
   }
 );
 
-movieRouter.get("/", [authenticate], async (req, res, next) => {
+movieRouter.get("/getAll", [authenticate], async (req, res, next) => {
+  const { name } = req.query;
+
   try {
-    const movies = await getMovies();
+    const movies = await getMovies(name);
 
     res.json({
       status: "success",
@@ -81,6 +85,25 @@ movieRouter.get("/", [authenticate], async (req, res, next) => {
     next(error);
   }
 });
+
+movieRouter.get(
+  "/",
+  [authenticate, validatePagingQueries(), validate],
+  async (req, res, next) => {
+    const { name, page, limit } = req.query;
+
+    try {
+      const data = await getMoviesWithPagination(name, page, limit);
+
+      res.json({
+        status: "success",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 movieRouter.get("/:id", [authenticate], async (req, res, next) => {
   const { id } = req.params;

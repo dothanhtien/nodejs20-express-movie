@@ -1,7 +1,9 @@
 "use strict";
+const { Op } = require("sequelize");
 const { body } = require("express-validator");
 const { Movie } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
+const { getPagination, getPagingData } = require("../pagination");
 
 const validateCreateMovieSchema = () => {
   return [
@@ -112,11 +114,33 @@ const createMovie = async (data) => {
   }
 };
 
-const getMovies = async () => {
+const getMovies = async (name) => {
+  const condition = name ? { name: { [Op.like]: `%${name}%` } } : null;
+
   try {
-    const movies = await Movie.findAll();
+    const movies = await Movie.findAll({
+      where: condition,
+    });
 
     return movies;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
+const getMoviesWithPagination = async (name, page, size) => {
+  const condition = name ? { name: { [Op.like]: `%${name}%` } } : null;
+  const { limit, offset } = getPagination(page, size);
+
+  try {
+    const data = await Movie.findAndCountAll({
+      where: condition,
+      limit,
+      offset,
+    });
+
+    return getPagingData(data, page, limit, "movies");
   } catch (error) {
     console.log(error);
     throw new ApiError(500, "Internal server error");
@@ -170,6 +194,7 @@ module.exports = {
   checkMovieExistsById,
   createMovie,
   getMovies,
+  getMoviesWithPagination,
   getMovieById,
   updateMovie,
   deleteMovie,
