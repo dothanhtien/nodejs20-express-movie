@@ -14,13 +14,13 @@ const {
 } = require("../../services/auth");
 const ApiError = require("../../utils/apiError");
 const { authenticate } = require("../../middlewares/auth");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 
 const authRouter = express.Router();
 
 authRouter.post(
   "/sign-in",
-  [validateSignInSchema(), validate],
+  [validateSignInSchema(), catchRequestError],
   async (req, res, next) => {
     const { email, password } = req.body;
 
@@ -58,7 +58,7 @@ authRouter.post(
 
 authRouter.post(
   "/sign-up",
-  [validateCreateUserSchema(), validate],
+  [validateCreateUserSchema(), catchRequestError],
   async (req, res, next) => {
     let { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
       req.body;

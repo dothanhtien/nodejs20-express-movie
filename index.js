@@ -3,7 +3,6 @@ const express = require("express");
 const path = require("path");
 const { sequelize } = require("./src/database/models");
 const rootRouter = require("./src/routes");
-const errorHandler = require("./src/middlewares/errorHandler");
 
 const app = express();
 
@@ -17,7 +16,14 @@ app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use("/api", rootRouter);
 
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  const { statusCode, message } = err;
+
+  res.status(statusCode).json({
+    status: "error",
+    message,
+  });
+});
 
 sequelize
   .authenticate()

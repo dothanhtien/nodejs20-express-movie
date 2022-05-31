@@ -1,7 +1,7 @@
 "use strict";
 const express = require("express");
 const { authenticate } = require("../../middlewares/auth");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 const {
   getCinemas,
   getCinemaById,
@@ -19,7 +19,7 @@ const cinemaRouter = express.Router();
 
 cinemaRouter.post(
   "/",
-  [authenticate, validateCreateCinemaSchema(), validate],
+  [authenticate, validateCreateCinemaSchema(), catchRequestError],
   async (req, res, next) => {
     const { name, address, phoneNumber, rating, description, cinemaComplexId } =
       req.body;
@@ -96,7 +96,7 @@ cinemaRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 cinemaRouter.put(
   "/:id",
-  [authenticate, validateUpdateCinemaSchema(), validate],
+  [authenticate, validateUpdateCinemaSchema(), catchRequestError],
   async (req, res, next) => {
     const { id } = req.params;
     const { name, address, phoneNumber, rating, description, cinemaComplexId } =

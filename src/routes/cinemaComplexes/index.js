@@ -2,7 +2,7 @@
 const express = require("express");
 const { authenticate } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 const ApiError = require("../../utils/apiError");
 const {
   validateCreateCinemaComplexSchema,
@@ -23,7 +23,7 @@ cinemaComplexRouter.post(
     authenticate,
     uploadImage("cinemaComplexes", "logo"),
     validateCreateCinemaComplexSchema(),
-    validate,
+    catchRequestError,
   ],
   async (req, res, next) => {
     const { name } = req.body;
@@ -90,7 +90,7 @@ cinemaComplexRouter.put(
     authenticate,
     uploadImage("cinemaComplexes", "logo"),
     validateUpdateCinemaComplexSchema(),
-    validate,
+    catchRequestError,
   ],
   async (req, res, next) => {
     const { id } = req.params;

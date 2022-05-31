@@ -13,7 +13,7 @@ const {
 const { getShowtimesByMovieId } = require("../../services/showtimes");
 const { authenticate } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 const removeFile = require("../../utils/removeFile");
 const ApiError = require("../../utils/apiError");
 const { validatePagingQueries } = require("../../services/pagination");
@@ -26,7 +26,7 @@ movieRouter.post(
     authenticate,
     uploadImage("movies", "poster"),
     validateCreateMovieSchema(),
-    validate,
+    catchRequestError,
   ],
   async (req, res, next) => {
     const {
@@ -88,7 +88,7 @@ movieRouter.get("/getAll", [authenticate], async (req, res, next) => {
 
 movieRouter.get(
   "/",
-  [authenticate, validatePagingQueries(), validate],
+  [authenticate, validatePagingQueries(), catchRequestError],
   async (req, res, next) => {
     const { name, page, limit } = req.query;
 
@@ -132,7 +132,7 @@ movieRouter.put(
     authenticate,
     uploadImage("movies", "poster"),
     validateUpdateMovieSchema(),
-    validate,
+    catchRequestError,
   ],
   async (req, res, next) => {
     const { id } = req.params;
