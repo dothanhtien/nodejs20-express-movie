@@ -14,6 +14,7 @@ const {
   updateCinemaComplex,
 } = require("../../services/cinemaComplexes");
 const removeFile = require("../../utils/removeFile");
+const { parseBoolean } = require("../../utils/helpers");
 
 const cinemaComplexRouter = express.Router();
 
@@ -49,8 +50,13 @@ cinemaComplexRouter.post(
 );
 
 cinemaComplexRouter.get("/", async (req, res, next) => {
+  const { includeCinemas, includeScreens } = req.query;
+
   try {
-    const cinemaComplexes = await getCinemaComplexes();
+    const cinemaComplexes = await getCinemaComplexes(
+      parseBoolean(includeCinemas),
+      parseBoolean(includeScreens)
+    );
 
     res.json({
       status: "success",

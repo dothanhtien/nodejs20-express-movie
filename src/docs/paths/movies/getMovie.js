@@ -2,7 +2,6 @@ module.exports = {
   get: {
     tags: ["Movies"],
     summary: "Represents a movie",
-    security: [{ bearerAuth: [] }],
     parameters: [
       {
         in: "path",

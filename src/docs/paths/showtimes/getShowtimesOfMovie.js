@@ -2,7 +2,6 @@ module.exports = {
   get: {
     tags: ["Showtimes"],
     summary: "Return a list of showtimes filter by movie ID",
-    security: [{ bearerAuth: [] }],
     parameters: [
       {
         in: "path",

@@ -2,7 +2,6 @@ module.exports = {
   get: {
     tags: ["Movies"],
     summary: "Return a list of movies and pagination",
-    security: [{ bearerAuth: [] }],
     parameters: [
       {
         in: "query",

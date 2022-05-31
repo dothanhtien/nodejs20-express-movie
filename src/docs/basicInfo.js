@@ -1,3 +1,4 @@
+"use strict";
 require("dotenv").config();
 
 module.exports = {
@@ -8,12 +9,11 @@ module.exports = {
   },
   servers: [
     {
-      url: "http://localhost:8080/api",
-      description: "Development server",
-    },
-    {
       url: process.env.BASE_URL + "/api",
-      description: "Production server",
+      description:
+        process.env.NODE_ENV === "development"
+          ? "Development server"
+          : "Production server",
     },
   ],
 };
