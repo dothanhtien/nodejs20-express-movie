@@ -1,6 +1,6 @@
 "use strict";
 const { body } = require("express-validator");
-const { CinemaComplex } = require("../../database/models");
+const { CinemaComplex, Cinema, Screen } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
 
 const validateCreateCinemaComplexSchema = () => {
@@ -52,9 +52,30 @@ const createCinemaComplex = async (data) => {
   }
 };
 
-const getCinemaComplexes = async () => {
+const getCinemaComplexes = async (
+  includeCinemas = false,
+  includeScreens = false
+) => {
+  let include = null;
+  if (includeCinemas) {
+    include = {
+      model: Cinema,
+      as: "cinemas",
+    };
+  }
+  if (includeCinemas && includeScreens) {
+    include = {
+      model: Cinema,
+      as: "cinemas",
+      include: {
+        model: Screen,
+        as: "screens",
+      },
+    };
+  }
+
   try {
-    const cinemaComplexes = await CinemaComplex.findAll();
+    const cinemaComplexes = await CinemaComplex.findAll({ include });
 
     return cinemaComplexes;
   } catch (error) {

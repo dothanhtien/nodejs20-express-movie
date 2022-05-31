@@ -69,7 +69,7 @@ movieRouter.post(
   }
 );
 
-movieRouter.get("/getAll", [authenticate], async (req, res, next) => {
+movieRouter.get("/getAll", async (req, res, next) => {
   const { name } = req.query;
 
   try {
@@ -88,7 +88,7 @@ movieRouter.get("/getAll", [authenticate], async (req, res, next) => {
 
 movieRouter.get(
   "/",
-  [authenticate, validatePagingQueries(), catchRequestError],
+  [validatePagingQueries(), catchRequestError],
   async (req, res, next) => {
     const { name, page, limit } = req.query;
 
@@ -105,7 +105,7 @@ movieRouter.get(
   }
 );
 
-movieRouter.get("/:id", [authenticate], async (req, res, next) => {
+movieRouter.get("/:id", async (req, res, next) => {
   const { id } = req.params;
 
   try {
@@ -215,7 +215,7 @@ movieRouter.delete("/:id", [authenticate], async (req, res, next) => {
   }
 });
 
-movieRouter.get("/:id/showtimes", [authenticate], async (req, res, next) => {
+movieRouter.get("/:id/showtimes", async (req, res, next) => {
   const { id } = req.params;
 
   try {
