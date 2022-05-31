@@ -39,7 +39,7 @@ movieRouter.post(
       releaseDate,
     } = req.body;
 
-    const poster = req.file.path;
+    const poster = req.file?.path;
 
     try {
       const movie = await createMovie({
@@ -128,19 +128,26 @@ movieRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 movieRouter.put(
   "/:id",
-  [authenticate, validateUpdateMovieSchema(), validate],
+  [
+    authenticate,
+    uploadImage("movies", "poster"),
+    validateUpdateMovieSchema(),
+    validate,
+  ],
   async (req, res, next) => {
     const { id } = req.params;
     const {
       name,
       description,
-      poster,
       trailer,
       rating,
       duration,
       status,
       releaseDate,
     } = req.body;
+
+    const poster = req.file?.path;
+
     const updates = {
       name,
       description,
@@ -158,25 +165,21 @@ movieRouter.put(
         throw new ApiError(404, "Movie does not exist");
       }
 
+      if (poster) {
+        await removeFile(movie.poster);
+      }
+
       const isUpdated = await updateMovie(updates, id);
       if (!isUpdated) {
         throw new ApiError(500, "Internal server error");
       }
 
-      // remove undefined properties to include in the response
-      Object.keys(updates).forEach((key) => {
-        if (updates[key] === undefined) {
-          delete updates[key];
-        }
-      });
+      await movie.reload();
 
       res.json({
         status: "success",
         data: {
-          movie: {
-            ...movie.dataValues,
-            ...updates,
-          },
+          movie,
         },
       });
     } catch (error) {

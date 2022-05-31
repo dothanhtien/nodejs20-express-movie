@@ -27,7 +27,7 @@ cinemaComplexRouter.post(
   ],
   async (req, res, next) => {
     const { name } = req.body;
-    const logo = req.file?.path || null;
+    const logo = req.file?.path;
 
     try {
       const cinemaComplex = await createCinemaComplex({ name, logo });
@@ -96,7 +96,7 @@ cinemaComplexRouter.put(
     const { id } = req.params;
     const { name } = req.body;
     const updates = { name };
-    updates.logo = req.file?.path || undefined;
+    updates.logo = req.file?.path;
 
     try {
       const cinemaComplex = await getCinemaComplexById(id);
@@ -104,7 +104,9 @@ cinemaComplexRouter.put(
         throw new ApiError(404, "Cinema complex does not exist");
       }
 
-      console.log(cinemaComplex);
+      if (updates.logo) {
+        await removeFile(cinemaComplex.logo);
+      }
 
       const isUpdated = await updateCinemaComplex(updates, id);
 
@@ -112,20 +114,12 @@ cinemaComplexRouter.put(
         throw new ApiError(500, "Internal server error");
       }
 
-      // remove undefined properties to include in the response
-      Object.keys(updates).forEach((key) => {
-        if (updates[key] === undefined) {
-          delete updates[key];
-        }
-      });
+      await cinemaComplex.reload();
 
       res.json({
         status: "success",
         data: {
-          cinemaComplex: {
-            ...cinemaComplex.dataValues,
-            ...updates,
-          },
+          cinemaComplex,
         },
       });
     } catch (error) {
