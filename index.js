@@ -1,4 +1,5 @@
 "use strict";
+require("dotenv").config();
 const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const path = require("path");
