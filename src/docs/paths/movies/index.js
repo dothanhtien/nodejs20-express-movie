@@ -1,13 +1,17 @@
-const createMovie = require("./createMovie");
+const getAllMovies = require("./getAllMovies");
 const getMovies = require("./getMovies");
+const createMovie = require("./createMovie");
 const getMovie = require("./getMovie");
 const updateMovie = require("./updateMovie");
 const deleteMovie = require("./deleteMovie");
 
 module.exports = {
+  "/movies/getAll": {
+    ...getAllMovies,
+  },
   "/movies": {
-    ...createMovie,
     ...getMovies,
+    ...createMovie,
   },
   "/movies/{id}": {
     ...getMovie,

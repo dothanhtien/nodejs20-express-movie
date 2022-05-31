@@ -4,7 +4,6 @@ const swaggerUi = require("swagger-ui-express");
 const path = require("path");
 const { sequelize } = require("./src/database/models");
 const rootRouter = require("./src/routes");
-const errorHandler = require("./src/middlewares/errorHandler");
 const swaggerSpec = require("./src/docs");
 
 const app = express();
@@ -21,7 +20,14 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use("/api", rootRouter);
 
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  const { statusCode, message } = err;
+
+  res.status(statusCode).json({
+    status: "error",
+    message,
+  });
+});
 
 sequelize
   .authenticate()

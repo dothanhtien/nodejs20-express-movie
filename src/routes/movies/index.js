@@ -8,13 +8,15 @@ const {
   updateMovie,
   validateUpdateMovieSchema,
   deleteMovie,
+  getMoviesWithPagination,
 } = require("../../services/movies");
 const { getShowtimesByMovieId } = require("../../services/showtimes");
 const { authenticate } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 const removeFile = require("../../utils/removeFile");
 const ApiError = require("../../utils/apiError");
+const { validatePagingQueries } = require("../../services/pagination");
 
 const movieRouter = express.Router();
 
@@ -24,7 +26,7 @@ movieRouter.post(
     authenticate,
     uploadImage("movies", "poster"),
     validateCreateMovieSchema(),
-    validate,
+    catchRequestError,
   ],
   async (req, res, next) => {
     const {
@@ -37,7 +39,7 @@ movieRouter.post(
       releaseDate,
     } = req.body;
 
-    const poster = req.file.path;
+    const poster = req.file?.path;
 
     try {
       const movie = await createMovie({
@@ -67,9 +69,11 @@ movieRouter.post(
   }
 );
 
-movieRouter.get("/", [authenticate], async (req, res, next) => {
+movieRouter.get("/getAll", [authenticate], async (req, res, next) => {
+  const { name } = req.query;
+
   try {
-    const movies = await getMovies();
+    const movies = await getMovies(name);
 
     res.json({
       status: "success",
@@ -81,6 +85,25 @@ movieRouter.get("/", [authenticate], async (req, res, next) => {
     next(error);
   }
 });
+
+movieRouter.get(
+  "/",
+  [authenticate, validatePagingQueries(), catchRequestError],
+  async (req, res, next) => {
+    const { name, page, limit } = req.query;
+
+    try {
+      const data = await getMoviesWithPagination(name, page, limit);
+
+      res.json({
+        status: "success",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 movieRouter.get("/:id", [authenticate], async (req, res, next) => {
   const { id } = req.params;
@@ -105,19 +128,26 @@ movieRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 movieRouter.put(
   "/:id",
-  [authenticate, validateUpdateMovieSchema(), validate],
+  [
+    authenticate,
+    uploadImage("movies", "poster"),
+    validateUpdateMovieSchema(),
+    catchRequestError,
+  ],
   async (req, res, next) => {
     const { id } = req.params;
     const {
       name,
       description,
-      poster,
       trailer,
       rating,
       duration,
       status,
       releaseDate,
     } = req.body;
+
+    const poster = req.file?.path;
+
     const updates = {
       name,
       description,
@@ -135,25 +165,21 @@ movieRouter.put(
         throw new ApiError(404, "Movie does not exist");
       }
 
+      if (poster) {
+        await removeFile(movie.poster);
+      }
+
       const isUpdated = await updateMovie(updates, id);
       if (!isUpdated) {
         throw new ApiError(500, "Internal server error");
       }
 
-      // remove undefined properties to include in the response
-      Object.keys(updates).forEach((key) => {
-        if (updates[key] === undefined) {
-          delete updates[key];
-        }
-      });
+      await movie.reload();
 
       res.json({
         status: "success",
         data: {
-          movie: {
-            ...movie.dataValues,
-            ...updates,
-          },
+          movie,
         },
       });
     } catch (error) {

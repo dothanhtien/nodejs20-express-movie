@@ -15,13 +15,13 @@ const { hashPassword } = require("../../services/auth");
 const { validatePagingQueries } = require("../../services/pagination");
 const ApiError = require("../../utils/apiError");
 const { authenticate } = require("../../middlewares/auth");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 
 const userRouter = express.Router();
 
 userRouter.post(
   "/",
-  [authenticate, validateCreateUserSchema(), validate],
+  [authenticate, validateCreateUserSchema(), catchRequestError],
   async (req, res, next) => {
     let {
       firstName,
@@ -95,7 +95,7 @@ userRouter.get("/getAll", [authenticate], async (req, res, next) => {
 
 userRouter.get(
   "/",
-  [authenticate, validatePagingQueries(), validate],
+  [authenticate, validatePagingQueries(), catchRequestError],
   async (req, res, next) => {
     const { email, page, limit } = req.query;
 
@@ -135,7 +135,7 @@ userRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 userRouter.put(
   "/:id",
-  [authenticate, validateUpdateUserSchema(), validate],
+  [authenticate, validateUpdateUserSchema(), catchRequestError],
   async (req, res, next) => {
     const { id } = req.params;
     const { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
