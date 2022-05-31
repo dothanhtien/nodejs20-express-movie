@@ -1,7 +1,7 @@
 "use strict";
 const express = require("express");
 const { authenticate } = require("../../middlewares/auth");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 const {
   createBooking,
   getBookings,
@@ -17,7 +17,7 @@ const bookingRouter = express.Router();
 
 bookingRouter.post(
   "/",
-  [authenticate, validateCreateBookingSchema(), validate],
+  [authenticate, validateCreateBookingSchema(), catchRequestError],
   async (req, res, next) => {
     const { showtimeId, tickets } = req.body;
 

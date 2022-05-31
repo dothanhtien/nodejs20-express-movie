@@ -1,7 +1,7 @@
 "use strict";
 const express = require("express");
 const { authenticate } = require("../../middlewares/auth");
-const { validate } = require("../../middlewares/validator");
+const { catchRequestError } = require("../../middlewares/validator");
 const {
   validateCreateShowtimeSchema,
   checkScreenAvailable,
@@ -20,7 +20,7 @@ const showtimeRouter = express.Router();
 
 showtimeRouter.post(
   "/",
-  [authenticate, validateCreateShowtimeSchema(), validate],
+  [authenticate, validateCreateShowtimeSchema(), catchRequestError],
   async (req, res, next) => {
     let { movieId, screenId, startTime, price } = req.body;
 

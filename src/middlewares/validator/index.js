@@ -10,7 +10,7 @@ const customValidationResult = validationResult.withDefaults({
   },
 });
 
-const validate = (req, res, next) => {
+const catchRequestError = (req, res, next) => {
   const errors = customValidationResult(req);
 
   if (!errors.isEmpty()) {
@@ -24,5 +24,5 @@ const validate = (req, res, next) => {
 };
 
 module.exports = {
-  validate,
+  catchRequestError,
 };

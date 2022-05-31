@@ -20,6 +20,10 @@ const ignoredFiles = [
 ];
 
 const removeFile = async (path) => {
+  if (!path) {
+    return;
+  }
+
   try {
     if (ignoredFiles.includes(path)) {
       return;
