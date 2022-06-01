@@ -54,7 +54,7 @@ cinemaRouter.post(
   }
 );
 
-cinemaRouter.get("/", [authenticate], async (req, res, next) => {
+cinemaRouter.get("/", async (req, res, next) => {
   try {
     const cinemas = await getCinemas();
 
@@ -73,7 +73,7 @@ cinemaRouter.get("/", [authenticate], async (req, res, next) => {
   }
 });
 
-cinemaRouter.get("/:id", [authenticate], async (req, res, next) => {
+cinemaRouter.get("/:id", async (req, res, next) => {
   const { id } = req.params;
 
   try {
