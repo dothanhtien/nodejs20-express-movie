@@ -1,6 +1,7 @@
 "use strict";
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const path = require("path");
 const { sequelize } = require("./src/database/models");
@@ -8,6 +9,8 @@ const rootRouter = require("./src/routes");
 const swaggerSpec = require("./src/docs");
 
 const app = express();
+
+app.use(cors());
 
 // parse incoming requests with JSON payloads and is based on body-parser
 app.use(express.json());
