@@ -10,11 +10,15 @@ const {
   deleteShowtimeById,
   getShowtimes,
   getShowtimeById,
+  checkScreenAvailableWithExistingShowtime,
+  updateShowtime,
+  validateUpdateShowtimeSchema,
 } = require("../../services/showtimes");
 const { getMovieById } = require("../../services/movies");
 const { checkScreenExistsById } = require("../../services/screens");
 const ApiError = require("../../utils/apiError");
 const { getSeatsByScreenId } = require("../../services/seats");
+const { updatePriceOfTicketsByShowtimeId } = require("../../services/tickets");
 
 const showtimeRouter = express.Router();
 
@@ -90,7 +94,7 @@ showtimeRouter.post(
   }
 );
 
-showtimeRouter.get("/", [authenticate], async (req, res, next) => {
+showtimeRouter.get("/", async (req, res, next) => {
   try {
     const showtimes = await getShowtimes();
 
@@ -109,7 +113,7 @@ showtimeRouter.get("/", [authenticate], async (req, res, next) => {
   }
 });
 
-showtimeRouter.get("/:id", [authenticate], async (req, res, next) => {
+showtimeRouter.get("/:id", async (req, res, next) => {
   const { id } = req.params;
 
   try {
@@ -129,6 +133,93 @@ showtimeRouter.get("/:id", [authenticate], async (req, res, next) => {
     next(error);
   }
 });
+
+showtimeRouter.put(
+  "/:id",
+  [
+    authenticate,
+    authorize("admin"),
+    validateUpdateShowtimeSchema(),
+    catchRequestError,
+  ],
+  async (req, res, next) => {
+    const { id } = req.params;
+    const { movieId, screenId, startTime, price } = req.body;
+
+    try {
+      const showtime = await getShowtimeById(id);
+      if (!showtime) {
+        throw new ApiError(404, "Showtime does not exist");
+      }
+
+      let movie = null;
+      if (movieId) {
+        movie = await getMovieById(movieId);
+        if (!movie) {
+          throw new ApiError(404, "Movie does not exist");
+        }
+      }
+
+      if (screenId) {
+        const isScreenExist = await checkScreenExistsById(screenId);
+        if (!isScreenExist) {
+          throw new ApiError(404, "Screen does not exist");
+        }
+      }
+
+      // calculate endTime based on startTime and duration of the movie
+      const endTime = new Date(startTime ? startTime : showtime.startTime);
+      endTime.setMinutes(
+        endTime.getMinutes() +
+          (movieId ? movie.duration : showtime.movie.duration)
+      );
+
+      // check if do not have any schedule in the screen between startTime and endTime
+      const isScreenAvailable = await checkScreenAvailableWithExistingShowtime(
+        id,
+        screenId ? screenId : showtime.screen.id,
+        startTime ? startTime : showtime.startTime,
+        endTime
+      );
+      if (!isScreenAvailable) {
+        throw new ApiError(400, "Screen is not available during this time");
+      }
+
+      if (price) {
+        const priceOfTicketsUpdated = updatePriceOfTicketsByShowtimeId(
+          price,
+          id
+        );
+        if (!priceOfTicketsUpdated) {
+          throw new ApiError(
+            500,
+            "An error occurred while updating the tickets"
+          );
+        }
+      }
+
+      const isUpdated = await updateShowtime(
+        { movieId, screenId, startTime, endTime },
+        id
+      );
+      if (!isUpdated) {
+        throw new ApiError(
+          500,
+          "An error occurred while updating the showtime"
+        );
+      }
+
+      await showtime.reload();
+
+      res.json({
+        status: "success",
+        showtime,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 showtimeRouter.delete(
   "/:id",
