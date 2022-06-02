@@ -63,6 +63,8 @@ bookingRouter.post(
         );
       }
 
+      await booking.reload();
+
       res.json({
         status: "success",
         data: {
@@ -150,5 +152,44 @@ bookingRouter.delete("/:id", [authenticate], async (req, res, next) => {
     next(error);
   }
 });
+
+bookingRouter.post(
+  "/:id/cancel-booking",
+  [authenticate],
+  async (req, res, next) => {
+    const { id } = req.params;
+    try {
+      const booking = await getBookingById(id);
+      if (!booking) {
+        throw new ApiError(404, "Booking does not exist");
+      }
+
+      const isUpdated = await booking.update({ isCancelled: true });
+      if (!isUpdated) {
+        throw new ApiError(500, "An error occurred while updating the booking");
+      }
+
+      const tickets = await booking.getTickets();
+
+      const ticketsUpdated = await updateStatusOfTickets(
+        false,
+        tickets.map(({ id }) => id)
+      );
+      if (!ticketsUpdated) {
+        throw new ApiError(
+          500,
+          "An error occurred while updating the status of tickets"
+        );
+      }
+
+      res.json({
+        status: "success",
+        message: "Booking cancelled successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = bookingRouter;

@@ -1,7 +1,7 @@
 module.exports = {
-  delete: {
+  post: {
     tags: ["Bookings"],
-    summary: "[Deprecated] Delete a booking",
+    summary: "Cancel a booking",
     security: [{ bearerAuth: [] }],
     parameters: [
       {
