@@ -2,7 +2,6 @@ module.exports = {
   get: {
     tags: ["Showtimes"],
     summary: "Represents a showtime",
-    security: [{ bearerAuth: [] }],
     parameters: [
       {
         in: "path",

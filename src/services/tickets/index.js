@@ -41,7 +41,34 @@ const updateStatusOfTickets = async (status, ticketIds) => {
   }
 };
 
+const updatePriceOfTicketsByShowtimeId = async (price, showtimeId) => {
+  try {
+    const count = await Ticket.count({
+      where: {
+        showtimeId,
+      },
+    });
+
+    const isUpdated = await Ticket.update(
+      {
+        price,
+      },
+      {
+        where: {
+          showtimeId,
+        },
+      }
+    );
+
+    return isUpdated[0] === count;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 module.exports = {
   getTicketsByShowtimeId,
   updateStatusOfTickets,
+  updatePriceOfTicketsByShowtimeId,
 };

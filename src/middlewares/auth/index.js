@@ -42,6 +42,17 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+const authorize =
+  (...roles) =>
+  (req, res, next) => {
+    if (roles.includes(req.user.role)) {
+      next();
+    } else {
+      throw new ApiError(403, "You don't have permission to access this route");
+    }
+  };
+
 module.exports = {
   authenticate,
+  authorize,
 };

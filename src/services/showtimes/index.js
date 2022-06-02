@@ -31,6 +31,28 @@ const validateCreateShowtimeSchema = () => {
   ];
 };
 
+const validateUpdateShowtimeSchema = () => {
+  return [
+    body("movieId")
+      .optional({ nullable: true })
+      .notEmpty()
+      .withMessage("movieId is required")
+      .isInt()
+      .withMessage("movieId is invalid"),
+    body("screenId")
+      .optional({ nullable: true })
+      .notEmpty()
+      .withMessage("screenId is required")
+      .isInt()
+      .withMessage("screenId is invalid"),
+    body("price")
+      .optional({ nullable: true })
+      .isInt()
+      .withMessage("Price is invalid")
+      .toInt(),
+  ];
+};
+
 const checkShowtimeExistsById = async (id) => {
   try {
     const count = await Showtime.count({
@@ -50,6 +72,41 @@ const checkScreenAvailable = async (screenId, startTime, endTime) => {
   try {
     const count = await Showtime.count({
       where: {
+        screenId,
+        [Op.or]: [
+          {
+            startTime: {
+              [Op.between]: [startTime, endTime],
+            },
+          },
+          {
+            endTime: {
+              [Op.between]: [startTime, endTime],
+            },
+          },
+        ],
+      },
+    });
+
+    return count > 0 ? false : true;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
+const checkScreenAvailableWithExistingShowtime = async (
+  showtimeId,
+  screenId,
+  startTime,
+  endTime
+) => {
+  try {
+    const count = await Showtime.count({
+      where: {
+        id: {
+          [Op.notIn]: [showtimeId],
+        },
         screenId,
         [Op.or]: [
           {
@@ -170,6 +227,21 @@ const getShowtimesByMovieId = async (movieId) => {
   }
 };
 
+const updateShowtime = async (data, id) => {
+  try {
+    const isUpdated = await Showtime.update(data, {
+      where: {
+        id,
+      },
+    });
+
+    return isUpdated[0] > 0;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 const deleteShowtimeById = async (id) => {
   try {
     const isDeleted = await Showtime.destroy({
@@ -187,11 +259,14 @@ const deleteShowtimeById = async (id) => {
 
 module.exports = {
   validateCreateShowtimeSchema,
+  validateUpdateShowtimeSchema,
   checkShowtimeExistsById,
   checkScreenAvailable,
+  checkScreenAvailableWithExistingShowtime,
   createShowtime,
   getShowtimes,
   getShowtimesByMovieId,
   getShowtimeById,
+  updateShowtime,
   deleteShowtimeById,
 };

@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
   Booking.init(
     {
       userId: DataTypes.INTEGER,
+      isCancelled: DataTypes.BOOLEAN,
     },
     {
       sequelize,

@@ -1,6 +1,6 @@
 "use strict";
 const express = require("express");
-const { authenticate } = require("../../middlewares/auth");
+const { authenticate, authorize } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
 const { catchRequestError } = require("../../middlewares/validator");
 const ApiError = require("../../utils/apiError");
@@ -22,6 +22,7 @@ cinemaComplexRouter.post(
   "/",
   [
     authenticate,
+    authorize("admin"),
     uploadImage("cinemaComplexes", "logo"),
     validateCreateCinemaComplexSchema(),
     catchRequestError,
@@ -94,6 +95,7 @@ cinemaComplexRouter.put(
   "/:id",
   [
     authenticate,
+    authorize("admin"),
     uploadImage("cinemaComplexes", "logo"),
     validateUpdateCinemaComplexSchema(),
     catchRequestError,
@@ -134,29 +136,33 @@ cinemaComplexRouter.put(
   }
 );
 
-cinemaComplexRouter.delete("/:id", [authenticate], async (req, res, next) => {
-  const { id } = req.params;
+cinemaComplexRouter.delete(
+  "/:id",
+  [authenticate, authorize("admin")],
+  async (req, res, next) => {
+    const { id } = req.params;
 
-  try {
-    const cinemaComplex = await getCinemaComplexById(id);
-    if (!cinemaComplex) {
-      throw new ApiError(404, "Cinema complex does not exist");
+    try {
+      const cinemaComplex = await getCinemaComplexById(id);
+      if (!cinemaComplex) {
+        throw new ApiError(404, "Cinema complex does not exist");
+      }
+
+      await removeFile(cinemaComplex.logo);
+
+      const isDeleted = await deleteCinemaComplexById(id);
+      if (!isDeleted) {
+        throw new ApiError(500, "Internal server error");
+      }
+
+      res.json({
+        status: "success",
+        message: "Cinema complex deleted successfully",
+      });
+    } catch (error) {
+      next(error);
     }
-
-    await removeFile(cinemaComplex.logo);
-
-    const isDeleted = await deleteCinemaComplexById(id);
-    if (!isDeleted) {
-      throw new ApiError(500, "Internal server error");
-    }
-
-    res.json({
-      status: "success",
-      message: "Cinema complex deleted successfully",
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 module.exports = cinemaComplexRouter;

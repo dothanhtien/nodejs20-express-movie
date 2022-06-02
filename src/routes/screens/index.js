@@ -1,6 +1,6 @@
 "use strict";
 const express = require("express");
-const { authenticate } = require("../../middlewares/auth");
+const { authenticate, authorize } = require("../../middlewares/auth");
 const { catchRequestError } = require("../../middlewares/validator");
 const {
   getScreens,
@@ -20,7 +20,12 @@ const screenRouter = express.Router();
 
 screenRouter.post(
   "/",
-  [authenticate, validateCreateScreenSchema(), catchRequestError],
+  [
+    authenticate,
+    authorize("admin"),
+    validateCreateScreenSchema(),
+    catchRequestError,
+  ],
   async (req, res, next) => {
     const { name, cinemaId } = req.body;
 
@@ -97,7 +102,12 @@ screenRouter.get("/:id", [authenticate], async (req, res, next) => {
 
 screenRouter.put(
   "/:id",
-  [authenticate, validateUpdateScreenSchema(), catchRequestError],
+  [
+    authenticate,
+    authorize("admin"),
+    validateUpdateScreenSchema(),
+    catchRequestError,
+  ],
   async (req, res, next) => {
     const { id } = req.params;
     const { name, cinemaId } = req.body;
@@ -151,27 +161,31 @@ screenRouter.put(
   }
 );
 
-screenRouter.delete("/:id", [authenticate], async (req, res, next) => {
-  const { id } = req.params;
+screenRouter.delete(
+  "/:id",
+  [authenticate, authorize("admin")],
+  async (req, res, next) => {
+    const { id } = req.params;
 
-  try {
-    const isExist = await checkScreenExistsById(id);
-    if (!isExist) {
-      throw new ApiError(404, "Screen does not exist");
+    try {
+      const isExist = await checkScreenExistsById(id);
+      if (!isExist) {
+        throw new ApiError(404, "Screen does not exist");
+      }
+
+      const isDeleted = await deleteScreenById(id);
+      if (!isDeleted) {
+        throw new ApiError(500, "Internal server error");
+      }
+
+      res.json({
+        status: "success",
+        message: "Screen deleted successfully",
+      });
+    } catch (error) {
+      next(error);
     }
-
-    const isDeleted = await deleteScreenById(id);
-    if (!isDeleted) {
-      throw new ApiError(500, "Internal server error");
-    }
-
-    res.json({
-      status: "success",
-      message: "Screen deleted successfully",
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 module.exports = screenRouter;
