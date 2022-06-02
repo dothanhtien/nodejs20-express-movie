@@ -11,7 +11,7 @@ const {
   getMoviesWithPagination,
 } = require("../../services/movies");
 const { getShowtimesByMovieId } = require("../../services/showtimes");
-const { authenticate } = require("../../middlewares/auth");
+const { authenticate, authorize } = require("../../middlewares/auth");
 const { uploadImage } = require("../../middlewares/upload");
 const { catchRequestError } = require("../../middlewares/validator");
 const removeFile = require("../../utils/removeFile");
@@ -24,6 +24,7 @@ movieRouter.post(
   "/",
   [
     authenticate,
+    authorize("admin"),
     uploadImage("movies", "poster"),
     validateCreateMovieSchema(),
     catchRequestError,
@@ -130,6 +131,7 @@ movieRouter.put(
   "/:id",
   [
     authenticate,
+    authorize("admin"),
     uploadImage("movies", "poster"),
     validateUpdateMovieSchema(),
     catchRequestError,
@@ -188,32 +190,36 @@ movieRouter.put(
   }
 );
 
-movieRouter.delete("/:id", [authenticate], async (req, res, next) => {
-  const { id } = req.params;
+movieRouter.delete(
+  "/:id",
+  [authenticate, authorize("admin")],
+  async (req, res, next) => {
+    const { id } = req.params;
 
-  try {
-    const movie = await getMovieById(id);
+    try {
+      const movie = await getMovieById(id);
 
-    if (!movie) {
-      throw new ApiError(404, "Movie does not exist");
+      if (!movie) {
+        throw new ApiError(404, "Movie does not exist");
+      }
+
+      await removeFile(movie.poster);
+
+      const isDeleted = await deleteMovie(id);
+
+      if (!isDeleted) {
+        throw new ApiError(500, "Internal server error");
+      }
+
+      res.json({
+        status: "success",
+        message: "Movie deleted successfully",
+      });
+    } catch (error) {
+      next(error);
     }
-
-    await removeFile(movie.poster);
-
-    const isDeleted = await deleteMovie(id);
-
-    if (!isDeleted) {
-      throw new ApiError(500, "Internal server error");
-    }
-
-    res.json({
-      status: "success",
-      message: "Movie deleted successfully",
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 movieRouter.get("/:id/showtimes", async (req, res, next) => {
   const { id } = req.params;

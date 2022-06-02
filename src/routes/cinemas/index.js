@@ -1,6 +1,6 @@
 "use strict";
 const express = require("express");
-const { authenticate } = require("../../middlewares/auth");
+const { authenticate, authorize } = require("../../middlewares/auth");
 const { catchRequestError } = require("../../middlewares/validator");
 const {
   getCinemas,
@@ -19,7 +19,12 @@ const cinemaRouter = express.Router();
 
 cinemaRouter.post(
   "/",
-  [authenticate, validateCreateCinemaSchema(), catchRequestError],
+  [
+    authenticate,
+    authorize("admin"),
+    validateCreateCinemaSchema(),
+    catchRequestError,
+  ],
   async (req, res, next) => {
     const { name, address, phoneNumber, rating, description, cinemaComplexId } =
       req.body;
@@ -96,7 +101,12 @@ cinemaRouter.get("/:id", async (req, res, next) => {
 
 cinemaRouter.put(
   "/:id",
-  [authenticate, validateUpdateCinemaSchema(), catchRequestError],
+  [
+    authenticate,
+    authorize("admin"),
+    validateUpdateCinemaSchema(),
+    catchRequestError,
+  ],
   async (req, res, next) => {
     const { id } = req.params;
     const { name, address, phoneNumber, rating, description, cinemaComplexId } =
@@ -143,27 +153,31 @@ cinemaRouter.put(
   }
 );
 
-cinemaRouter.delete("/:id", [authenticate], async (req, res, next) => {
-  const { id } = req.params;
+cinemaRouter.delete(
+  "/:id",
+  [authenticate, authorize("admin")],
+  async (req, res, next) => {
+    const { id } = req.params;
 
-  try {
-    const isExist = await checkCinemaExistsById(id);
-    if (!isExist) {
-      throw new ApiError(404, "Cinema does not exist");
+    try {
+      const isExist = await checkCinemaExistsById(id);
+      if (!isExist) {
+        throw new ApiError(404, "Cinema does not exist");
+      }
+
+      const isDeleted = await deleteCinemaById(id);
+      if (!isDeleted) {
+        throw new ApiError(500, "Internal server error");
+      }
+
+      res.json({
+        status: "success",
+        message: "Cinema deleted successfully",
+      });
+    } catch (error) {
+      next(error);
     }
-
-    const isDeleted = await deleteCinemaById(id);
-    if (!isDeleted) {
-      throw new ApiError(500, "Internal server error");
-    }
-
-    res.json({
-      status: "success",
-      message: "Cinema deleted successfully",
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 module.exports = cinemaRouter;

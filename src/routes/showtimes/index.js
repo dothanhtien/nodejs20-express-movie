@@ -1,6 +1,6 @@
 "use strict";
 const express = require("express");
-const { authenticate } = require("../../middlewares/auth");
+const { authenticate, authorize } = require("../../middlewares/auth");
 const { catchRequestError } = require("../../middlewares/validator");
 const {
   validateCreateShowtimeSchema,
@@ -20,7 +20,12 @@ const showtimeRouter = express.Router();
 
 showtimeRouter.post(
   "/",
-  [authenticate, validateCreateShowtimeSchema(), catchRequestError],
+  [
+    authenticate,
+    authorize("admin"),
+    validateCreateShowtimeSchema(),
+    catchRequestError,
+  ],
   async (req, res, next) => {
     let { movieId, screenId, startTime, price } = req.body;
 
@@ -125,27 +130,31 @@ showtimeRouter.get("/:id", [authenticate], async (req, res, next) => {
   }
 });
 
-showtimeRouter.delete("/:id", [authenticate], async (req, res, next) => {
-  const { id } = req.params;
+showtimeRouter.delete(
+  "/:id",
+  [authenticate, authorize("admin")],
+  async (req, res, next) => {
+    const { id } = req.params;
 
-  try {
-    const isExist = await checkShowtimeExistsById(id);
-    if (!isExist) {
-      throw new ApiError(404, "Showtime does not exist");
+    try {
+      const isExist = await checkShowtimeExistsById(id);
+      if (!isExist) {
+        throw new ApiError(404, "Showtime does not exist");
+      }
+
+      const isDeleted = await deleteShowtimeById(id);
+      if (!isDeleted) {
+        throw new ApiError(500, "Internal server error");
+      }
+
+      res.json({
+        status: "success",
+        message: "Showtime deleted successfully",
+      });
+    } catch (error) {
+      next(error);
     }
-
-    const isDeleted = await deleteShowtimeById(id);
-    if (!isDeleted) {
-      throw new ApiError(500, "Internal server error");
-    }
-
-    res.json({
-      status: "success",
-      message: "Showtime deleted successfully",
-    });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 module.exports = showtimeRouter;
