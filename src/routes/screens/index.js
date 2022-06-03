@@ -12,9 +12,11 @@ const {
   validateUpdateScreenSchema,
   checkScreenExistsById,
   deleteScreenById,
+  getScreensWithPagination,
 } = require("../../services/screens");
 const { checkCinemaExistsById } = require("../../services/cinemas");
 const ApiError = require("../../utils/apiError");
+const { validatePagingQueries } = require("../../services/pagination");
 
 const screenRouter = express.Router();
 
@@ -48,7 +50,7 @@ screenRouter.post(
         throw new ApiError(500, "Internal server error");
       }
 
-      res.json({
+      res.status(201).json({
         status: "success",
         data: {
           screen,
@@ -60,7 +62,7 @@ screenRouter.post(
   }
 );
 
-screenRouter.get("/", [authenticate], async (req, res, next) => {
+screenRouter.get("/get-all", async (req, res, next) => {
   try {
     const screens = await getScreens();
 
@@ -79,12 +81,35 @@ screenRouter.get("/", [authenticate], async (req, res, next) => {
   }
 });
 
-screenRouter.get("/:id", [authenticate], async (req, res, next) => {
+screenRouter.get(
+  "/",
+  [validatePagingQueries(), catchRequestError],
+  async (req, res, next) => {
+    const { page, limit } = req.query;
+
+    try {
+      const screens = await getScreensWithPagination(page, limit);
+      if (!screens) {
+        throw new ApiError(500, "An error occurred while fetching the screens");
+      }
+
+      res.json({
+        status: "success",
+        data: {
+          screens,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+screenRouter.get("/:id", async (req, res, next) => {
   const { id } = req.params;
 
   try {
     const screen = await getScreenById(id);
-
     if (!screen) {
       throw new ApiError(404, "Screen does not exist");
     }
@@ -110,8 +135,10 @@ screenRouter.put(
   ],
   async (req, res, next) => {
     const { id } = req.params;
-    const { name, cinemaId } = req.body;
-    const updates = { name, cinemaId };
+    const updates = {
+      name: req.body.name,
+      cinemaId: req.body.cinemaId,
+    };
 
     try {
       const screen = await getScreenById(id);
@@ -143,16 +170,15 @@ screenRouter.put(
 
       const isUpdated = await updateScreen(updates, id);
       if (!isUpdated) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while updating the screen");
       }
+
+      await screen.reload();
 
       res.json({
         status: "success",
         data: {
-          screen: {
-            ...screen.dataValues,
-            ...updates,
-          },
+          screen,
         },
       });
     } catch (error) {
@@ -175,7 +201,7 @@ screenRouter.delete(
 
       const isDeleted = await deleteScreenById(id);
       if (!isDeleted) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while deleting the screen");
       }
 
       res.json({
