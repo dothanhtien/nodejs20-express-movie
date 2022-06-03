@@ -10,7 +10,7 @@ module.exports = {
             properties: {
               email: {
                 type: "string",
-                example: "user@example.com",
+                example: "admin@example.com",
               },
               password: {
                 type: "string",

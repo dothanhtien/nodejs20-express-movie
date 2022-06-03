@@ -1,7 +1,9 @@
 "use strict";
+const { Op } = require("sequelize");
 const { body } = require("express-validator");
 const { Cinema } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
+const { getPagination, getPagingData } = require("../pagination");
 
 const validateCreateCinemaSchema = () => {
   return [
@@ -105,11 +107,33 @@ const createCinema = async (data) => {
   }
 };
 
-const getCinemas = async () => {
+const getCinemas = async (name) => {
+  const condition = name ? { name: { [Op.like]: `%${name}%` } } : null;
+
   try {
-    const cinemas = await Cinema.findAll();
+    const cinemas = await Cinema.findAll({
+      where: condition,
+    });
 
     return cinemas;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
+const getCinemasWithPagination = async (name, page, size) => {
+  const condition = name ? { name: { [Op.like]: `%${name}%` } } : null;
+  const { limit, offset } = getPagination(page, size);
+
+  try {
+    const data = await Cinema.findAndCountAll({
+      where: condition,
+      limit,
+      offset,
+    });
+
+    return getPagingData(data, page, limit, "cinemas");
   } catch (error) {
     console.log(error);
     throw new ApiError(500, "Internal server error");
@@ -164,6 +188,7 @@ module.exports = {
   checkCinemaExistsByName,
   createCinema,
   getCinemas,
+  getCinemasWithPagination,
   getCinemaById,
   updateCinema,
   deleteCinemaById,
