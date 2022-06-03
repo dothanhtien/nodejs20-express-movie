@@ -1,6 +1,7 @@
-const getMe = require("./getMe");
 const signIn = require("./signIn");
 const signUp = require("./signUp");
+const getMyProfile = require("./getMyProfile");
+const updateProfile = require("./updateProfile");
 
 module.exports = {
   "/auth/sign-in": {
@@ -9,7 +10,10 @@ module.exports = {
   "/auth/sign-up": {
     ...signUp,
   },
-  "/auth/me": {
-    ...getMe,
+  "/auth/my-profile": {
+    ...getMyProfile,
+  },
+  "/auth/update-profile": {
+    ...updateProfile,
   },
 };
