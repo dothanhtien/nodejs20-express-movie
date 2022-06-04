@@ -12,6 +12,7 @@ const {
   validateUpdateCinemaComplexSchema,
   updateCinemaComplex,
 } = require("../../services/cinemaComplexes");
+const { getShowtimesOfCinemaComplexes } = require("../../services/showtimes");
 const ApiError = require("../../utils/apiError");
 const removeFile = require("../../utils/removeFile");
 const { parseBoolean } = require("../../utils/helpers");
@@ -75,6 +76,28 @@ cinemaComplexRouter.get("/", async (req, res, next) => {
       status: "success",
       data: {
         cinemaComplexes,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+cinemaComplexRouter.get("/showtimes", async (req, res, next) => {
+  try {
+    const showtimesOfcinemaComplexes = await getShowtimesOfCinemaComplexes();
+
+    if (!showtimesOfcinemaComplexes) {
+      throw new ApiError(
+        500,
+        "An error occurred while fetching the showtimes of cinema complexes"
+      );
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        cinemaComplexes: showtimesOfcinemaComplexes,
       },
     });
   } catch (error) {

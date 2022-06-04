@@ -254,6 +254,39 @@ const getShowtimesByMovieId = async (movieId) => {
   }
 };
 
+const getShowtimesOfCinemaComplexes = async () => {
+  try {
+    const cinemaComplexesShowtimes = await CinemaComplex.findAll({
+      include: {
+        model: Cinema,
+        as: "cinemas",
+        required: true,
+        include: {
+          model: Screen,
+          as: "screens",
+          required: true,
+          include: {
+            model: Showtime,
+            as: "showtimes",
+            attributes: {
+              exclude: ["movieId", "screenId"],
+            },
+            include: {
+              model: Movie,
+              as: "movie",
+            },
+          },
+        },
+      },
+    });
+
+    return cinemaComplexesShowtimes;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 const updateShowtime = async (data, id) => {
   try {
     const isUpdated = await Showtime.update(data, {
@@ -294,6 +327,7 @@ module.exports = {
   getShowtimes,
   getShowtimesWithPagination,
   getShowtimesByMovieId,
+  getShowtimesOfCinemaComplexes,
   getShowtimeById,
   updateShowtime,
   deleteShowtimeById,
