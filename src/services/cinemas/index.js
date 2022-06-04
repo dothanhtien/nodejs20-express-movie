@@ -59,6 +59,7 @@ const validateUpdateCinemaSchema = () => {
       .withMessage("Rating must be between 0 and 5"),
     body("description").optional({ nullable: true }).trim(),
     body("cinemaComplexId")
+      .optional({ nullable: true })
       .notEmpty()
       .withMessage("cinemaComplexId is required")
       .isInt()

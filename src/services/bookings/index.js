@@ -2,6 +2,7 @@
 const { body } = require("express-validator");
 const { Booking, Ticket, User } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
+const { getPagination, getPagingData } = require("../pagination");
 
 const validateCreateBookingSchema = () => {
   return [
@@ -70,6 +71,35 @@ const getBookings = async () => {
   }
 };
 
+const getBookingsWithPagination = async (page, size) => {
+  const { limit, offset } = getPagination(page, size);
+
+  try {
+    const data = await Booking.findAndCountAll({
+      attributes: { exclude: ["userId"] },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: { exclude: ["password"] },
+        },
+        {
+          model: Ticket,
+          as: "tickets",
+          through: { attributes: [] },
+        },
+      ],
+      limit,
+      offset,
+    });
+
+    return getPagingData(data, page, limit, "bookings");
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 const getBookingById = async (id) => {
   try {
     const booking = await Booking.findByPk(id, {
@@ -114,6 +144,7 @@ module.exports = {
   validateCreateBookingSchema,
   createBooking,
   getBookings,
+  getBookingsWithPagination,
   getBookingById,
   deleteBookingById,
 };

@@ -10,7 +10,6 @@ const {
   createCinema,
   validateUpdateCinemaSchema,
   updateCinema,
-  checkCinemaExistsById,
   deleteCinemaById,
   getCinemasWithPagination,
 } = require("../../services/cinemas");
@@ -46,7 +45,7 @@ cinemaRouter.post(
         cinemaComplexId,
       });
       if (!cinema) {
-        throw new ApiError(500, "An error occurred while creating cinema");
+        throw new ApiError(500, "An error occurred while creating the cinema");
       }
 
       await cinema.reload();
@@ -63,14 +62,14 @@ cinemaRouter.post(
   }
 );
 
-cinemaRouter.get("/get-all", async (req, res, next) => {
+cinemaRouter.get("/all", async (req, res, next) => {
   const { name } = req.query;
 
   try {
     const cinemas = await getCinemas(name);
 
     if (!cinemas) {
-      throw new ApiError(500, "Internal server error");
+      throw new ApiError(500, "An error occurred while fetching the cinemas");
     }
 
     res.json({
@@ -91,17 +90,15 @@ cinemaRouter.get(
     const { name, page, limit } = req.query;
 
     try {
-      const cinemas = await getCinemasWithPagination(name, page, limit);
+      const data = await getCinemasWithPagination(name, page, limit);
 
-      if (!cinemas) {
-        throw new ApiError(500, "Internal server error");
+      if (!data) {
+        throw new ApiError(500, "An error occurred while fetching the cinemas");
       }
 
       res.json({
         status: "success",
-        data: {
-          cinemas,
-        },
+        data,
       });
     } catch (error) {
       next(error);
@@ -155,12 +152,6 @@ cinemaRouter.put(
         throw new ApiError(404, "Cinema does not exist");
       }
 
-      Object.keys(updates).forEach((key) => {
-        if (updates[key] === undefined || updates[key] === null) {
-          delete updates[key];
-        }
-      });
-
       const isUpdated = await updateCinema(updates, id);
       if (!isUpdated) {
         throw new ApiError(500, "An error occurred while updating the cinema");
@@ -187,9 +178,17 @@ cinemaRouter.delete(
     const { id } = req.params;
 
     try {
-      const isExist = await checkCinemaExistsById(id);
-      if (!isExist) {
+      const cinema = await getCinemaById(id);
+      if (!cinema) {
         throw new ApiError(404, "Cinema does not exist");
+      }
+
+      const numOfScreens = await cinema.countScreens();
+      if (numOfScreens > 0) {
+        throw new ApiError(
+          400,
+          "Please delete the screens belonging to this cinema first"
+        );
       }
 
       const isDeleted = await deleteCinemaById(id);

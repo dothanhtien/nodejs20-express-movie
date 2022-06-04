@@ -13,12 +13,14 @@ const {
   checkScreenAvailableWithExistingShowtime,
   updateShowtime,
   validateUpdateShowtimeSchema,
+  getShowtimesWithPagination,
 } = require("../../services/showtimes");
 const { getMovieById } = require("../../services/movies");
 const { checkScreenExistsById } = require("../../services/screens");
 const ApiError = require("../../utils/apiError");
 const { getSeatsByScreenId } = require("../../services/seats");
 const { updatePriceOfTicketsByShowtimeId } = require("../../services/tickets");
+const { validatePagingQueries } = require("../../services/pagination");
 
 const showtimeRouter = express.Router();
 
@@ -79,10 +81,15 @@ showtimeRouter.post(
       });
 
       if (!showtime) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(
+          500,
+          "An error occurred while creating the showtime"
+        );
       }
 
-      res.json({
+      await showtime.reload();
+
+      res.status(201).json({
         status: "success",
         data: {
           showtime,
@@ -94,12 +101,12 @@ showtimeRouter.post(
   }
 );
 
-showtimeRouter.get("/", async (req, res, next) => {
+showtimeRouter.get("/all", async (req, res, next) => {
   try {
     const showtimes = await getShowtimes();
 
     if (!showtimes) {
-      throw new ApiError(500, "Internal server error");
+      throw new ApiError(500, "An error occurred while fetching the showtimes");
     }
 
     res.json({
@@ -112,6 +119,32 @@ showtimeRouter.get("/", async (req, res, next) => {
     next(error);
   }
 });
+
+showtimeRouter.get(
+  "/",
+  [validatePagingQueries(), catchRequestError],
+  async (req, res, next) => {
+    const { page, limit } = req.query;
+
+    try {
+      const data = await getShowtimesWithPagination(page, limit);
+
+      if (!data) {
+        throw new ApiError(
+          500,
+          "An error occurred while fetching the showtimes"
+        );
+      }
+
+      res.json({
+        status: "success",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 showtimeRouter.get("/:id", async (req, res, next) => {
   const { id } = req.params;
@@ -235,7 +268,10 @@ showtimeRouter.delete(
 
       const isDeleted = await deleteShowtimeById(id);
       if (!isDeleted) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(
+          500,
+          "An error occurred while deleting the showtime"
+        );
       }
 
       res.json({

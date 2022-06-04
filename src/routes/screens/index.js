@@ -47,8 +47,10 @@ screenRouter.post(
 
       const screen = await createScreen({ name, cinemaId });
       if (!screen) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while creating the screen");
       }
+
+      await screen.reload();
 
       res.status(201).json({
         status: "success",
@@ -62,12 +64,11 @@ screenRouter.post(
   }
 );
 
-screenRouter.get("/get-all", async (req, res, next) => {
+screenRouter.get("/all", async (req, res, next) => {
   try {
     const screens = await getScreens();
-
     if (!screens) {
-      throw new ApiError(500, "Internal server error");
+      throw new ApiError(500, "An error occurred while fetching the screens");
     }
 
     res.json({
@@ -88,16 +89,14 @@ screenRouter.get(
     const { page, limit } = req.query;
 
     try {
-      const screens = await getScreensWithPagination(page, limit);
-      if (!screens) {
+      const data = await getScreensWithPagination(page, limit);
+      if (!data) {
         throw new ApiError(500, "An error occurred while fetching the screens");
       }
 
       res.json({
         status: "success",
-        data: {
-          screens,
-        },
+        data,
       });
     } catch (error) {
       next(error);
@@ -146,7 +145,7 @@ screenRouter.put(
         throw new ApiError(404, "Screen does not exist");
       }
 
-      const isCinemaExist = await checkCinemaExistsById(cinemaId);
+      const isCinemaExist = await checkCinemaExistsById(updates.cinemaId);
       if (!isCinemaExist) {
         throw new ApiError(400, "Cinema does not exist");
       }
@@ -158,8 +157,8 @@ screenRouter.put(
       });
 
       const isScreenExist = await checkScreenExistsInCinemaByName(
-        name,
-        cinemaId
+        updates.name,
+        updates.cinemaId
       );
       if (isScreenExist) {
         throw new ApiError(

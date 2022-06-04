@@ -1,14 +1,14 @@
 module.exports = {
   post: {
-    tags: ["Cinemas"],
-    summary: "Create a cinema",
+    tags: ["Cinema complexes"],
+    summary: "Create a cinema complex",
     security: [{ bearerAuth: [] }],
     requestBody: {
       required: true,
       content: {
-        "application/json": {
+        "multipart/form-data": {
           schema: {
-            $ref: "#/components/requestBodies/CinemaForm",
+            $ref: "#/components/requestBodies/CinemaComplexFormData",
           },
         },
       },

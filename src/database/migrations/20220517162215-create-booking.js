@@ -10,11 +10,11 @@ module.exports = {
       },
       userId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
         references: {
           model: "Users",
           key: "id",
         },
+        onDelete: "SET NULL",
       },
       isCancelled: {
         type: Sequelize.BOOLEAN,

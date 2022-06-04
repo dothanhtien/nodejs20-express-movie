@@ -41,7 +41,7 @@ authRouter.post(
       if (!accessToken) {
         throw new ApiError(
           500,
-          "An error occurred while generating access token"
+          "An error occurred while generating the access token"
         );
       }
 
@@ -84,12 +84,13 @@ authRouter.post(
         password: hashedPassword,
         phoneNumber,
         dateOfBirth,
-        role: "user",
       });
 
       if (!user) {
         throw new ApiError(500, "An error occurred while signing up");
       }
+
+      await user.reload();
 
       res.status(201).json({
         status: "success",
@@ -135,7 +136,10 @@ authRouter.put(
         const isExist = await checkUserExistsByEmail(updates.email);
         // skip this statement if no change in the email
         if (user.email !== updates.email && isExist) {
-          throw new ApiError(400, "Updated email already exists");
+          throw new ApiError(
+            400,
+            "The next value of updated email already exists"
+          );
         }
       }
 
@@ -157,7 +161,7 @@ authRouter.put(
 
       const isUpdated = await updateUser(updates, user.id);
       if (!isUpdated) {
-        throw new ApiError(500, "An error occurred while updating profile");
+        throw new ApiError(500, "An error occurred while updating the profile");
       }
 
       await user.reload();
@@ -189,7 +193,7 @@ authRouter.get("/my-bookings", [authenticate], async (req, res, next) => {
     });
 
     if (!bookings) {
-      throw new ApiError(500, "An error occurred while fetching bookings");
+      throw new ApiError(500, "An error occurred while fetching the bookings");
     }
 
     res.json({

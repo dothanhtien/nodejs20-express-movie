@@ -1,7 +1,7 @@
 module.exports = {
   get: {
     tags: ["Screens"],
-    summary: "Return a list of screens and pagination",
+    summary: "Return a list of screens with pagination",
     parameters: [
       {
         in: "query",

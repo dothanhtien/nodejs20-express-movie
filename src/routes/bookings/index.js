@@ -8,7 +8,9 @@ const {
   getBookingById,
   deleteBookingById,
   validateCreateBookingSchema,
+  getBookingsWithPagination,
 } = require("../../services/bookings");
+const { validatePagingQueries } = require("../../services/pagination");
 const { getShowtimeById } = require("../../services/showtimes");
 const { updateStatusOfTickets } = require("../../services/tickets");
 const ApiError = require("../../utils/apiError");
@@ -65,7 +67,7 @@ bookingRouter.post(
 
       await booking.reload();
 
-      res.json({
+      res.status(201).json({
         status: "success",
         data: {
           booking,
@@ -77,12 +79,12 @@ bookingRouter.post(
   }
 );
 
-bookingRouter.get("/", [authenticate], async (req, res, next) => {
+bookingRouter.get("/all", [authenticate], async (req, res, next) => {
   try {
     const bookings = await getBookings();
 
     if (!bookings) {
-      throw new ApiError(500, "Internal server error");
+      throw new ApiError(500, "An error occurred while fetching the bookings");
     }
 
     res.json({
@@ -95,6 +97,32 @@ bookingRouter.get("/", [authenticate], async (req, res, next) => {
     next(error);
   }
 });
+
+bookingRouter.get(
+  "/",
+  [authenticate, validatePagingQueries(), catchRequestError],
+  async (req, res, next) => {
+    const { page, limit } = req.query;
+
+    try {
+      const data = await getBookingsWithPagination(page, limit);
+
+      if (!data) {
+        throw new ApiError(
+          500,
+          "An error occurred while fetching the bookings"
+        );
+      }
+
+      res.json({
+        status: "success",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 bookingRouter.get("/:id", [authenticate], async (req, res, next) => {
   const { id } = req.params;

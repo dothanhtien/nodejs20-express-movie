@@ -38,7 +38,7 @@ const validateCreateMovieSchema = () => {
       .isLength({ max: 255 })
       .withMessage("Status has exceeds 255 characters"),
     body("releaseDate")
-      .optional({ nullable: true })
+      .optional({ checkFalsy: true })
       .isISO8601()
       .withMessage("Release date is invalid"),
   ];

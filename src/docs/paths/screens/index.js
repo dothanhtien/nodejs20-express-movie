@@ -6,7 +6,7 @@ const updateScreen = require("./updateScreen");
 const deleteScreen = require("./deleteScreen");
 
 module.exports = {
-  "/screens/get-all": {
+  "/screens/all": {
     ...getAllScreens,
   },
   "/screens": {

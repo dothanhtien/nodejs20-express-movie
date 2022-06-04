@@ -1,7 +1,7 @@
 module.exports = {
   get: {
     tags: ["Users"],
-    summary: "Return a list of users and pagination",
+    summary: "Return a list of users with pagination",
     security: [{ bearerAuth: [] }],
     parameters: [
       {

@@ -1,7 +1,7 @@
 module.exports = {
   get: {
     tags: ["Cinemas"],
-    summary: "Return a list of cinemas and pagination",
+    summary: "Return a list of cinemas with pagination",
     parameters: [
       {
         in: "query",

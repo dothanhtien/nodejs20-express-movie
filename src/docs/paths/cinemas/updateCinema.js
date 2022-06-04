@@ -1,8 +1,20 @@
 module.exports = {
-  post: {
+  put: {
     tags: ["Cinemas"],
-    summary: "Create a cinema",
+    summary: "Update a cinema",
     security: [{ bearerAuth: [] }],
+    parameters: [
+      {
+        in: "path",
+        name: "id",
+        required: true,
+        description: "Cinema ID",
+        schema: {
+          type: "integer",
+          minimum: 1,
+        },
+      },
+    ],
     requestBody: {
       required: true,
       content: {
