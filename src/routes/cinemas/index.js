@@ -10,9 +10,10 @@ const {
   createCinema,
   validateUpdateCinemaSchema,
   updateCinema,
-  checkCinemaExistsById,
   deleteCinemaById,
+  getCinemasWithPagination,
 } = require("../../services/cinemas");
+const { validatePagingQueries } = require("../../services/pagination");
 const ApiError = require("../../utils/apiError");
 
 const cinemaRouter = express.Router();
@@ -44,8 +45,10 @@ cinemaRouter.post(
         cinemaComplexId,
       });
       if (!cinema) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while creating the cinema");
       }
+
+      await cinema.reload();
 
       res.status(201).json({
         status: "success",
@@ -59,12 +62,14 @@ cinemaRouter.post(
   }
 );
 
-cinemaRouter.get("/", async (req, res, next) => {
+cinemaRouter.get("/all", async (req, res, next) => {
+  const { name } = req.query;
+
   try {
-    const cinemas = await getCinemas();
+    const cinemas = await getCinemas(name);
 
     if (!cinemas) {
-      throw new ApiError(500, "Internal server error");
+      throw new ApiError(500, "An error occurred while fetching the cinemas");
     }
 
     res.json({
@@ -77,6 +82,29 @@ cinemaRouter.get("/", async (req, res, next) => {
     next(error);
   }
 });
+
+cinemaRouter.get(
+  "/",
+  [validatePagingQueries(), catchRequestError],
+  async (req, res, next) => {
+    const { name, page, limit } = req.query;
+
+    try {
+      const data = await getCinemasWithPagination(name, page, limit);
+
+      if (!data) {
+        throw new ApiError(500, "An error occurred while fetching the cinemas");
+      }
+
+      res.json({
+        status: "success",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 cinemaRouter.get("/:id", async (req, res, next) => {
   const { id } = req.params;
@@ -109,15 +137,13 @@ cinemaRouter.put(
   ],
   async (req, res, next) => {
     const { id } = req.params;
-    const { name, address, phoneNumber, rating, description, cinemaComplexId } =
-      req.body;
     const updates = {
-      name,
-      address,
-      phoneNumber,
-      rating,
-      description,
-      cinemaComplexId,
+      name: req.body.name,
+      address: req.body.address,
+      phoneNumber: req.body.phoneNumber,
+      rating: req.body.rating,
+      description: req.body.description,
+      cinemaComplexId: req.body.cinemaComplexId,
     };
 
     try {
@@ -126,25 +152,17 @@ cinemaRouter.put(
         throw new ApiError(404, "Cinema does not exist");
       }
 
-      // remove undefined properties to include in the response
-      Object.keys(updates).forEach((key) => {
-        if (updates[key] === undefined || updates[key] === null) {
-          delete updates[key];
-        }
-      });
-
       const isUpdated = await updateCinema(updates, id);
       if (!isUpdated) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while updating the cinema");
       }
+
+      await cinema.reload();
 
       res.json({
         status: "success",
         data: {
-          cinema: {
-            ...cinema.dataValues,
-            ...updates,
-          },
+          cinema,
         },
       });
     } catch (error) {
@@ -160,14 +178,22 @@ cinemaRouter.delete(
     const { id } = req.params;
 
     try {
-      const isExist = await checkCinemaExistsById(id);
-      if (!isExist) {
+      const cinema = await getCinemaById(id);
+      if (!cinema) {
         throw new ApiError(404, "Cinema does not exist");
+      }
+
+      const numOfScreens = await cinema.countScreens();
+      if (numOfScreens > 0) {
+        throw new ApiError(
+          400,
+          "Please delete the screens belonging to this cinema first"
+        );
       }
 
       const isDeleted = await deleteCinemaById(id);
       if (!isDeleted) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while deleting the cinema");
       }
 
       res.json({

@@ -1,8 +1,7 @@
 module.exports = {
   get: {
-    tags: ["Bookings"],
-    summary: "Return a list of bookings with pagination",
-    security: [{ bearerAuth: [] }],
+    tags: ["Screens"],
+    summary: "Return a list of screens with pagination",
     parameters: [
       {
         in: "query",

@@ -3,6 +3,7 @@ const { body } = require("express-validator");
 const { Op } = require("sequelize");
 const { Screen } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
+const { getPagination, getPagingData } = require("../pagination");
 
 const validateCreateScreenSchema = () => {
   return [
@@ -92,6 +93,22 @@ const getScreens = async () => {
   }
 };
 
+const getScreensWithPagination = async (page, size) => {
+  const { limit, offset } = getPagination(page, size);
+
+  try {
+    const data = await Screen.findAndCountAll({
+      limit,
+      offset,
+    });
+
+    return getPagingData(data, page, limit, "screens");
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 const getScreenById = async (id) => {
   try {
     const screen = await Screen.findByPk(id);
@@ -140,6 +157,7 @@ module.exports = {
   checkScreenExistsInCinemaByName,
   createScreen,
   getScreens,
+  getScreensWithPagination,
   getScreenById,
   updateScreen,
   deleteScreenById,

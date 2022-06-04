@@ -10,6 +10,7 @@ const {
   Ticket,
 } = require("../../database/models");
 const ApiError = require("../../utils/apiError");
+const { getPagination, getPagingData } = require("../pagination");
 
 const validateCreateShowtimeSchema = () => {
   return [
@@ -170,6 +171,32 @@ const getShowtimes = async () => {
   }
 };
 
+const getShowtimesWithPagination = async (page, size) => {
+  const { limit, offset } = getPagination(page, size);
+
+  try {
+    const data = await Showtime.findAndCountAll({
+      include: [
+        {
+          model: Movie,
+          as: "movie",
+        },
+        {
+          model: Screen,
+          as: "screen",
+        },
+      ],
+      limit,
+      offset,
+    });
+
+    return getPagingData(data, page, limit, "showtimes");
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(500, "Internal server error");
+  }
+};
+
 const getShowtimeById = async (id) => {
   try {
     const showtime = await Showtime.findByPk(id, {
@@ -265,6 +292,7 @@ module.exports = {
   checkScreenAvailableWithExistingShowtime,
   createShowtime,
   getShowtimes,
+  getShowtimesWithPagination,
   getShowtimesByMovieId,
   getShowtimeById,
   updateShowtime,

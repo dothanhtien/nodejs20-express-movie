@@ -1,6 +1,8 @@
 module.exports = {
   post: {
-    tags: ["Auth"],
+    tags: ["Screens"],
+    summary: "Create a screen",
+    security: [{ bearerAuth: [] }],
     requestBody: {
       required: true,
       content: {
@@ -8,13 +10,13 @@ module.exports = {
           schema: {
             type: "object",
             properties: {
-              email: {
+              name: {
                 type: "string",
-                example: "admin@example.com",
+                example: "Screen 3",
               },
-              password: {
-                type: "string",
-                example: "11111111",
+              cinemaId: {
+                type: "integer",
+                example: 1,
               },
             },
           },

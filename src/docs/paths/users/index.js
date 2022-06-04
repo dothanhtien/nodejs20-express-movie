@@ -6,7 +6,7 @@ const updateUser = require("./updateUser");
 const deleteUser = require("./deleteUser");
 
 module.exports = {
-  "/users/getAll": {
+  "/users/all": {
     ...getAllUsers,
   },
   "/users": {

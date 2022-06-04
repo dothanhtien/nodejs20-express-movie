@@ -6,7 +6,7 @@ const updateMovie = require("./updateMovie");
 const deleteMovie = require("./deleteMovie");
 
 module.exports = {
-  "/movies/getAll": {
+  "/movies/all": {
     ...getAllMovies,
   },
   "/movies": {

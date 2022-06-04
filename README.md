@@ -4,8 +4,10 @@
 
 1. Clone or download from github: `https://github.com/dothanhtien/nodejs20-express-movie.git`
 2. Add `.env` file in the root folder
-3. Run command: `yarn`
-4. Run custom command: `yarn db:init`
+3. Copy `.env file content` in the section II to your `.env` file
+4. To install packages => Run command: `yarn`
+5. To add file storage folder => Run command: `yarn setup`
+6. To init database and generate seeds => Run command: `yarn db:init`
 
 Other commands:
 
@@ -24,12 +26,6 @@ DEV_DB_PASSWORD=null
 DEV_DB_DATABASE="dev_database"
 DEV_DB_HOST="127.0.0.1"
 DEV_DB_DIALECT="mysql"
-
-TEST_DB_USERNAME="root"
-TEST_DB_PASSWORD=null
-TEST_DB_DATABASE="test_database"
-TEST_DB_HOST="127.0.0.1"
-TEST_DB_DIALECT="mysql"
 
 PROD_DB_USERNAME="root"
 PROD_DB_PASSWORD=null

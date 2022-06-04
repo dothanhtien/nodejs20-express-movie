@@ -76,11 +76,14 @@ userRouter.post(
   }
 );
 
-userRouter.get("/getAll", [authenticate], async (req, res, next) => {
+userRouter.get("/all", [authenticate], async (req, res, next) => {
   const { email } = req.query;
 
   try {
     const users = await getUsers(email);
+    if (!users) {
+      throw new ApiError(500, "An error occurred while fetching the users");
+    }
 
     res.json({
       status: "success",
@@ -101,6 +104,9 @@ userRouter.get(
 
     try {
       const data = await getUsersWithPagination(email, page, limit);
+      if (!data) {
+        throw new ApiError("An error occurred while fetching the users");
+      }
 
       res.json({
         status: "success",
@@ -138,15 +144,14 @@ userRouter.put(
   [authenticate, validateUpdateUserSchema(), catchRequestError],
   async (req, res, next) => {
     const { id } = req.params;
-    const { firstName, lastName, email, password, phoneNumber, dateOfBirth } =
-      req.body;
     const updates = {
-      firstName,
-      lastName,
-      email,
-      password,
-      phoneNumber,
-      dateOfBirth,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      password: req.body.password,
+      phoneNumber: req.body.phoneNumber,
+      dateOfBirth: req.body.dateOfBirth,
+      role: req.body.role,
     };
 
     try {
@@ -155,46 +160,55 @@ userRouter.put(
         throw new ApiError(404, "User does not exist");
       }
 
-      if (email) {
-        const isExist = await checkUserExistsByEmail(email);
+      if (req.user.role === "user" && user.role === "admin") {
+        throw new ApiError(
+          403,
+          "You don't have permission to update the admin"
+        );
+      }
+
+      if (
+        req.user.role === "user" &&
+        user.role === "user" &&
+        updates.role === "admin"
+      ) {
+        throw new ApiError(
+          403,
+          "You don't have permission to update this user to admin"
+        );
+      }
+
+      if (updates.email) {
+        const isExist = await checkUserExistsByEmail(updates.email);
         // skip this statement if no change in the email
-        if (user.email !== email && isExist) {
+        if (user.email !== updates.email && isExist) {
           throw new ApiError(400, "Updated email already exists");
         }
       } else {
-        updates.email = user.email;
+        delete updates.email;
       }
 
       if (!updates.password) {
-        // prevent error from db when saving password = null
         delete updates.password;
       } else {
         updates.password = hashPassword(updates.password);
       }
 
-      const isUpdated = await updateUser(updates, id);
-      if (!isUpdated) {
-        throw new ApiError(500, "Internal server error");
+      if (!updates.dateOfBirth) {
+        delete updates.dateOfBirth;
       }
 
-      // remove undefined properties to include in the response
-      Object.keys(updates).forEach((key) => {
-        if (updates[key] === undefined) {
-          delete updates[key];
-        }
-      });
+      const isUpdated = await updateUser(updates, id);
+      if (!isUpdated) {
+        throw new ApiError(500, "An error occurred while updating the user");
+      }
 
-      // delete password property to make it is not present in response data
-      delete user.dataValues.password;
-      delete updates.password;
+      await user.reload();
 
       res.json({
         status: "success",
         data: {
-          user: {
-            ...user.dataValues,
-            ...updates,
-          },
+          user,
         },
       });
     } catch (error) {
@@ -225,7 +239,7 @@ userRouter.delete("/:id", [authenticate], async (req, res, next) => {
 
     const isDeleted = await deleteUserById(id);
     if (!isDeleted) {
-      throw new ApiError(500, "An error occurred while deleting user");
+      throw new ApiError(500, "An error occurred while deleting the user");
     }
 
     res.json({

@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
+    "setup": "node setup.js",
     "db:init": "npx sequelize db:migrate && npx sequelize db:seed:all",
     "db:reset": "npx sequelize db:migrate:undo:all && npx sequelize db:migrate && npx sequelize db:seed:all"
   },

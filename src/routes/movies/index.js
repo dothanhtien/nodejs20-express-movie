@@ -30,15 +30,12 @@ movieRouter.post(
     catchRequestError,
   ],
   async (req, res, next) => {
-    const {
-      name,
-      description,
-      trailer,
-      rating,
-      duration,
-      status,
-      releaseDate,
-    } = req.body;
+    let { name, description, trailer, rating, duration, status, releaseDate } =
+      req.body;
+
+    if (!releaseDate) {
+      releaseDate = null;
+    }
 
     const poster = req.file?.path;
 
@@ -55,8 +52,13 @@ movieRouter.post(
       });
 
       if (!movie) {
-        throw new ErrorHandler(500, "Internal server error");
+        throw new ErrorHandler(
+          500,
+          "An error occurred while creating the movie"
+        );
       }
+
+      await movie.reload();
 
       res.status(201).json({
         status: "success",
@@ -70,11 +72,15 @@ movieRouter.post(
   }
 );
 
-movieRouter.get("/getAll", async (req, res, next) => {
+movieRouter.get("/all", async (req, res, next) => {
   const { name } = req.query;
 
   try {
     const movies = await getMovies(name);
+
+    if (!movies) {
+      throw new ApiError(500, "An error occurred while fetching the movies");
+    }
 
     res.json({
       status: "success",
@@ -95,6 +101,10 @@ movieRouter.get(
 
     try {
       const data = await getMoviesWithPagination(name, page, limit);
+
+      if (!data) {
+        throw new ApiError(500, "An error occurred while fetching the movies");
+      }
 
       res.json({
         status: "success",
@@ -138,28 +148,17 @@ movieRouter.put(
   ],
   async (req, res, next) => {
     const { id } = req.params;
-    const {
-      name,
-      description,
-      trailer,
-      rating,
-      duration,
-      status,
-      releaseDate,
-    } = req.body;
-
-    const poster = req.file?.path;
-
     const updates = {
-      name,
-      description,
-      poster,
-      trailer,
-      rating,
-      duration,
-      status,
-      releaseDate,
+      name: req.body.name,
+      description: req.body.description,
+      poster: req.body.poster,
+      trailer: req.body.trailer,
+      rating: req.body.rating,
+      duration: req.body.duration,
+      status: req.body.status,
+      releaseDate: req.body.releaseDate,
     };
+    const poster = req.file?.path;
 
     try {
       const movie = await getMovieById(id);
@@ -173,7 +172,7 @@ movieRouter.put(
 
       const isUpdated = await updateMovie(updates, id);
       if (!isUpdated) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while updating the movie");
       }
 
       await movie.reload();
@@ -206,9 +205,8 @@ movieRouter.delete(
       await removeFile(movie.poster);
 
       const isDeleted = await deleteMovie(id);
-
       if (!isDeleted) {
-        throw new ApiError(500, "Internal server error");
+        throw new ApiError(500, "An error occurred while deleting the movie");
       }
 
       res.json({
@@ -231,6 +229,12 @@ movieRouter.get("/:id/showtimes", async (req, res, next) => {
     }
 
     const showtimesOfMovie = await getShowtimesByMovieId(id);
+    if (!showtimesOfMovie) {
+      throw new ApiError(
+        500,
+        "An error occurred while fetching the showrimes of the movie"
+      );
+    }
 
     res.json({
       status: "success",

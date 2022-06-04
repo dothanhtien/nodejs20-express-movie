@@ -5,6 +5,8 @@ const {
   validateCreateUserSchema,
   checkUserExistsByEmail,
   createUser,
+  updateUser,
+  validateUpdateUserSchema,
 } = require("../../services/users");
 const {
   comparePassword,
@@ -39,7 +41,7 @@ authRouter.post(
       if (!accessToken) {
         throw new ApiError(
           500,
-          "An error occurred while generating access token"
+          "An error occurred while generating the access token"
         );
       }
 
@@ -82,12 +84,13 @@ authRouter.post(
         password: hashedPassword,
         phoneNumber,
         dateOfBirth,
-        role: "user",
       });
 
       if (!user) {
         throw new ApiError(500, "An error occurred while signing up");
       }
+
+      await user.reload();
 
       res.status(201).json({
         status: "success",
@@ -101,7 +104,7 @@ authRouter.post(
   }
 );
 
-authRouter.get("/me", [authenticate], (req, res, next) => {
+authRouter.get("/my-profile", [authenticate], (req, res, next) => {
   try {
     res.json({
       status: "success",
@@ -113,6 +116,67 @@ authRouter.get("/me", [authenticate], (req, res, next) => {
     next(error);
   }
 });
+
+authRouter.put(
+  "/update-profile",
+  [authenticate, validateUpdateUserSchema(), catchRequestError],
+  async (req, res, next) => {
+    const updates = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      password: req.body.password,
+      phoneNumber: req.body.phoneNumber,
+      dateOfBirth: req.body.dateOfBirth,
+    };
+    const { user } = req;
+
+    try {
+      if (updates.email) {
+        const isExist = await checkUserExistsByEmail(updates.email);
+        // skip this statement if no change in the email
+        if (user.email !== updates.email && isExist) {
+          throw new ApiError(
+            400,
+            "The next value of updated email already exists"
+          );
+        }
+      }
+
+      if (updates.password) {
+        if (comparePassword(updates.password, user.password)) {
+          delete updates.password;
+        } else {
+          updates.password = hashPassword(updates.password);
+        }
+      }
+
+      // check if logged in user is admin
+      if (
+        updates.role !== "admin" ||
+        (updates.role === "admin" && user.role !== "admin")
+      ) {
+        delete updates.role;
+      }
+
+      const isUpdated = await updateUser(updates, user.id);
+      if (!isUpdated) {
+        throw new ApiError(500, "An error occurred while updating the profile");
+      }
+
+      await user.reload();
+
+      res.json({
+        status: "success",
+        data: {
+          user,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 authRouter.get("/my-bookings", [authenticate], async (req, res, next) => {
   const { user } = req;
@@ -129,7 +193,7 @@ authRouter.get("/my-bookings", [authenticate], async (req, res, next) => {
     });
 
     if (!bookings) {
-      throw new ApiError(500, "An error occurred while fetching bookings");
+      throw new ApiError(500, "An error occurred while fetching the bookings");
     }
 
     res.json({
