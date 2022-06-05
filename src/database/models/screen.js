@@ -14,7 +14,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "screenId",
         as: "showtimes",
       });
-      this.hasMany(models.Seat, { foreignKey: "screenId", as: "screens" });
+      this.hasMany(models.Seat, {
+        foreignKey: "screenId",
+        as: "seats",
+        onDelete: "CASCADE",
+      });
     }
   }
   Screen.init(

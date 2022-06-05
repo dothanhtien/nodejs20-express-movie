@@ -10,13 +10,12 @@ const {
   validateCreateScreenSchema,
   updateScreen,
   validateUpdateScreenSchema,
-  checkScreenExistsById,
   deleteScreenById,
   getScreensWithPagination,
 } = require("../../services/screens");
 const { checkCinemaExistsById } = require("../../services/cinemas");
-const ApiError = require("../../utils/apiError");
 const { validatePagingQueries } = require("../../services/pagination");
+const ApiError = require("../../utils/apiError");
 
 const screenRouter = express.Router();
 
@@ -193,9 +192,17 @@ screenRouter.delete(
     const { id } = req.params;
 
     try {
-      const isExist = await checkScreenExistsById(id);
-      if (!isExist) {
+      const screen = await getScreenById(id);
+      if (!screen) {
         throw new ApiError(404, "Screen does not exist");
+      }
+
+      const numOfShowtimes = await screen.countShowtimes();
+      if (numOfShowtimes > 0) {
+        throw new ApiError(
+          400,
+          "Please delete the showtimes belonging to this screen first"
+        );
       }
 
       const isDeleted = await deleteScreenById(id);
