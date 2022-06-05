@@ -73,7 +73,12 @@ const checkScreenExistsInCinemaByName = async (name, cinemaId) => {
 
 const createScreen = async (data) => {
   try {
-    const screen = await Screen.create(data);
+    const screen = await Screen.create(data, {
+      include: {
+        association: "seats",
+        as: "seats",
+      },
+    });
 
     return screen;
   } catch (error) {

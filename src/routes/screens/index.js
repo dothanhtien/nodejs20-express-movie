@@ -44,7 +44,24 @@ screenRouter.post(
         throw new ApiError(400, "Screen name already exists in the Cinema");
       }
 
-      const screen = await createScreen({ name, cinemaId });
+      // generate seat template to add into the screen
+      const seatsTemplate = [];
+      const seatRows = ["A", "B", "C", "D", "E"];
+      const seatColumns = 12;
+      for (const seatRow of seatRows) {
+        for (let i = 1; i <= seatColumns; i++) {
+          const seat = {
+            name: seatRow + i,
+          };
+          seatsTemplate.push(seat);
+        }
+      }
+
+      const screen = await createScreen({
+        name,
+        cinemaId,
+        seats: seatsTemplate,
+      });
       if (!screen) {
         throw new ApiError(500, "An error occurred while creating the screen");
       }
