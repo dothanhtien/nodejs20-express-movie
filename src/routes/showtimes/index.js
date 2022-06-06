@@ -261,9 +261,22 @@ showtimeRouter.delete(
     const { id } = req.params;
 
     try {
-      const isExist = await checkShowtimeExistsById(id);
-      if (!isExist) {
+      const showtime = await getShowtimeById(id);
+      if (!showtime) {
         throw new ApiError(404, "Showtime does not exist");
+      }
+
+      const ticketsOfShowtime = await showtime.getTickets();
+
+      const ticketListAvailable = ticketsOfShowtime.every(
+        (ticket) => !ticket.status
+      );
+
+      if (!ticketListAvailable) {
+        throw new ApiError(
+          400,
+          "The tickets of this showtime are already booked. This showtime cannot be deleted"
+        );
       }
 
       const isDeleted = await deleteShowtimeById(id);

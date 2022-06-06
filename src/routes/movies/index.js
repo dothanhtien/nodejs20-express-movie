@@ -202,12 +202,20 @@ movieRouter.delete(
         throw new ApiError(404, "Movie does not exist");
       }
 
-      await removeFile(movie.poster);
+      const numOfShowtimes = await movie.countShowtimes();
+      if (numOfShowtimes > 0) {
+        throw new ApiError(
+          400,
+          "Please delete the showtimes belonging to this movie first"
+        );
+      }
 
       const isDeleted = await deleteMovie(id);
       if (!isDeleted) {
         throw new ApiError(500, "An error occurred while deleting the movie");
       }
+
+      await removeFile(movie.poster);
 
       res.json({
         status: "success",

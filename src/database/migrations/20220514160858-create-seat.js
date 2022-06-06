@@ -19,6 +19,7 @@ module.exports = {
           model: "Screens",
           key: "id",
         },
+        onDelete: "CASCADE",
       },
       createdAt: {
         allowNull: false,

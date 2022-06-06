@@ -10,13 +10,12 @@ const {
   validateCreateScreenSchema,
   updateScreen,
   validateUpdateScreenSchema,
-  checkScreenExistsById,
   deleteScreenById,
   getScreensWithPagination,
 } = require("../../services/screens");
 const { checkCinemaExistsById } = require("../../services/cinemas");
-const ApiError = require("../../utils/apiError");
 const { validatePagingQueries } = require("../../services/pagination");
+const ApiError = require("../../utils/apiError");
 
 const screenRouter = express.Router();
 
@@ -45,7 +44,24 @@ screenRouter.post(
         throw new ApiError(400, "Screen name already exists in the Cinema");
       }
 
-      const screen = await createScreen({ name, cinemaId });
+      // generate seat template to add into the screen
+      const seatsTemplate = [];
+      const seatRows = ["A", "B", "C", "D", "E"];
+      const seatColumns = 12;
+      for (const seatRow of seatRows) {
+        for (let i = 1; i <= seatColumns; i++) {
+          const seat = {
+            name: seatRow + i,
+          };
+          seatsTemplate.push(seat);
+        }
+      }
+
+      const screen = await createScreen({
+        name,
+        cinemaId,
+        seats: seatsTemplate,
+      });
       if (!screen) {
         throw new ApiError(500, "An error occurred while creating the screen");
       }
@@ -193,9 +209,17 @@ screenRouter.delete(
     const { id } = req.params;
 
     try {
-      const isExist = await checkScreenExistsById(id);
-      if (!isExist) {
+      const screen = await getScreenById(id);
+      if (!screen) {
         throw new ApiError(404, "Screen does not exist");
+      }
+
+      const numOfShowtimes = await screen.countShowtimes();
+      if (numOfShowtimes > 0) {
+        throw new ApiError(
+          400,
+          "Please delete the showtimes belonging to this screen first"
+        );
       }
 
       const isDeleted = await deleteScreenById(id);
