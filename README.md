@@ -9,11 +9,28 @@
 5. To add file storage folder => Run command: `yarn setup`
 6. To init database and generate seeds => Run command: `yarn db:init`
 
-Other commands:
+### Default login credentials:
+1. Admin role
+- email: admin@example.com
+- password: 11111111
+
+2. User role
+- email: user@example.com
+- password: 11111111
+
+### Other commands:
 
 1.  To destroy the tables and rerun migration and seed scripts `yarn db:reset`
 
-## II. .env file content
+## II. Features
+1. Auth: Authentication, authorization
+2. Upload image: Disk storage when `NODE_ENV="development"`, Cloudinary when `NODE_ENV="production"`
+3. Validate requests
+4. Describe API with Swagger UI
+5. CRUD with modules: Auth, User, Cinema complex, Cinema, Screen, Seat, Movie, Showtime, Ticket, Booking,...
+6. etc...
+
+## III. .env file content
 
 ```
 NODE_ENV="development"
